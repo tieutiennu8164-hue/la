@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Hope-v2';
+const CACHE_NAME = 'Hope-v100';
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
