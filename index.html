@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Binh Ky Luat App</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8f9fa; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .app-header { background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; z-index: 10;}
+        .header-title { font-size: 18px; font-weight: bold; color: #1e293b; }
+        .main-content { flex: 1; padding: 15px; overflow-y: auto; padding-bottom: 80px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; padding: 12px 0 20px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 50; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #94a3b8; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .nav-item.active { color: #d82d8b; }
+        .nav-icon { font-size: 24px; margin-bottom: 2px; }
+        .view-section { display: none; } .view-section.active { display: block; }
+        
+        /* CSS CHUNG */
+        .card { background: white; border-radius: 16px; padding: 20px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-bottom: 15px; }
+        .btn-add-main { width: 100%; padding: 16px; background: linear-gradient(to right, #d82d8b, #f472b6); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(216,45,139,0.3); display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 100; justify-content: center; align-items: flex-end; }
+        .modal-box { background: white; width: 100%; padding: 20px; border-radius: 20px 20px 0 0; position: relative; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out;}
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #94a3b8; cursor: pointer; font-weight: bold; z-index: 10; }
+        .form-input, .form-select { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; background: #f8f9fa; outline: none; }
+        .btn-submit { width: 100%; padding: 14px; background: #d82d8b; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; }
+        
+        /* CSS CHI TIÊU */
+        .summary-header { display: flex; gap: 10px; margin-bottom: 15px; }
+        .summary-box { flex: 1; background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .list-header { display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 10px; }
+        .list-header-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; color: #64748b; margin-bottom: -1px; cursor: pointer; transition: 0.2s;}
+        .tab-out.active { color: #ef4444; border-bottom: 2px solid #ef4444; font-weight: 600; }
+        .tab-in.active { color: #22c55e; border-bottom: 2px solid #22c55e; font-weight: 600; }
+        .sub-tab.active { color: #d82d8b; border-bottom: 2px solid #d82d8b; font-weight: 600; }
+        .chart-toggle-btn { padding: 6px 14px; border: 1px solid #cbd5e1; background: white; font-size: 12px; color: #64748b; font-weight: bold; border-radius: 20px; cursor: pointer; }
+        .chart-toggle-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
+        .donut-wrapper { position: relative; width: 180px; height: 180px; display: flex; justify-content: center; align-items: center; margin: 0 auto;}
+        .donut-chart { width: 100%; height: 100%; border-radius: 50%; transition: background 0.3s; }
+        .donut-hole { width: 100px; height: 100px; background: white; border-radius: 50%; position: absolute; }
+        .type-btn { flex: 1; padding: 12px; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; color: #64748b; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .type-btn.active-out { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+        .type-btn.active-in { border-color: #22c55e; color: #22c55e; background: #f0fdf4; }
+
+        /* CSS NHIỆM VỤ & KHÁC */
+        .domino-container { display: flex; overflow-x: auto; padding: 10px 0; margin-bottom: 5px; gap: 10px;}
+        .domino-container::-webkit-scrollbar { display: none; } 
+        .domino-btn { flex: 0 0 70px; height: 50px; background: white; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; color: #475569;}
+        .domino-btn.active { background: #d82d8b; color: white; border-color: #d82d8b; }
+        .task-card { background: white; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .setting-btn { display: flex; align-items: center; gap: 15px; background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER CHUNG -->
+    <div class="app-header">
+        <div class="header-title" id="headerTitle">Kỷ Luật Bản Thân</div>
+        <div style="font-size: 20px;">⭐ 🎧 🏠</div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-content" id="mainContent">
+        
+        <!-- VIEW: CHI TIÊU -->
+        <div id="view-exp" class="view-section">
+            <div class="domino-container" style="margin-bottom: 15px; padding: 0;">
+                <div class="domino-btn active" style="flex: 1;" onclick="setExpView('tinh-hinh', this)">Tình hình</div>
+                <div class="domino-btn" style="flex: 1;" onclick="setExpView('bien-dong', this)">Biến động</div>
+            </div>
+
+            <!-- Tình hình chi tiêu -->
+            <div id="exp-tinh-hinh">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; background: white; padding: 12px; border-radius: 14px; border: 1px solid #e2e8f0;">
+                    <div onclick="changeMonth(-1)" style="font-size: 18px; color: #d82d8b; font-weight: bold; cursor: pointer; padding: 0 10px;">◀</div>
+                    <div id="exp-month-label" style="font-size: 15px; font-weight: bold; color: #1e293b;">📅 Tháng ...</div>
+                    <div onclick="changeMonth(1)" style="font-size: 18px; color: #d82d8b; font-weight: bold; cursor: pointer; padding: 0 10px;">▶</div>
+                </div>
+                
+                <div class="summary-header">
+                    <div class="summary-box">
+                        <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">↗ Tổng Chi</div>
+                        <div class="summary-amount" id="exp-total-out">0đ</div>
+                    </div>
+                    <div class="summary-box">
+                        <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">↙ Tổng Thu</div>
+                        <div class="summary-amount" id="exp-total-in">0đ</div>
+                    </div>
+                </div>
+
+                <button class="btn-add-main" onclick="openModal('addExpModal')"><span style="font-size: 20px;">+</span> Nhập giao dịch</button>
+
+                <div class="card">
+                    <div class="list-header" style="margin-bottom: 15px;">
+                        <div class="list-header-tab tab-out active" id="tab-out" onclick="setExpTab('out')">📉 Tiền Chi</div>
+                        <div class="list-header-tab tab-in" id="tab-in" onclick="setExpTab('in')">📈 Tiền Thu</div>
+                    </div>
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 15px;">
+                        <button class="chart-toggle-btn active">🍩 Biểu đồ</button>
+                    </div>
+                    <div style="margin: 20px 0 25px 0;"><div class="donut-wrapper"><div class="donut-chart" id="donutChart"></div><div class="donut-hole"></div></div></div>
+                    
+                    <div class="list-header" id="sub-tabs-out">
+                        <div class="list-header-tab sub-tab active" id="sub-child" onclick="setExpSubTab('child')">Danh mục con</div>
+                        <div class="list-header-tab sub-tab" id="sub-parent" onclick="setExpSubTab('parent')">Danh mục cha</div>
+                    </div>
+                    <div id="category-list" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- Biến động chi tiêu -->
+            <div id="exp-bien-dong" style="display: none;">
+                <div class="card" style="text-align: center;"><div style="padding: 40px; color:#94a3b8; font-size:14px;">Tính năng Biến động đang được tối ưu cho bản Offline. Hãy dùng Tình hình thu chi nhé!</div></div>
+            </div>
+        </div>
+
+        <!-- VIEW: NHIỆM VỤ -->
+        <div id="view-tasks" class="view-section active">
+            <div class="domino-container" id="task-dates-container"></div>
+            <div id="task-list-container"></div>
+        </div>
+
+        <!-- VIEW: GHI CHÚ -->
+        <div id="view-notes" class="view-section">
+            <button class="btn-add-main" onclick="openNoteModal()"><span style="font-size: 20px;">+</span> Viết Ghi Chú Mới</button>
+            <div id="notes-list-container"></div>
+        </div>
+
+        <!-- VIEW: CÀI ĐẶT -->
+        <div id="view-settings" class="view-section">
+            <div class="card">
+                <h3 style="margin-top:0; color:#1e293b; font-size: 16px;">Sao Lưu & Khôi Phục (Offline)</h3>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Toàn bộ dữ liệu của bạn đang được lưu trong trình duyệt. Đóng gói thành file để chuyển sang máy mới.</p>
+                <div class="setting-btn" style="background: #eff6ff; border-color: #bfdbfe;" onclick="exportData()">
+                    <div style="font-size: 28px; background: white; padding: 8px; border-radius: 12px;">⬇️</div>
+                    <div><div style="font-weight: bold; color: #1d4ed8;">Xuất dữ liệu (Backup)</div><div style="font-size: 12px; color: #64748b;">Lưu file BinhBackup.json</div></div>
+                </div>
+                <div class="setting-btn" style="background: #fef2f2; border-color: #fecaca;" onclick="document.getElementById('importFile').click()">
+                    <div style="font-size: 28px; background: white; padding: 8px; border-radius: 12px;">⬆️</div>
+                    <div><div style="font-weight: bold; color: #b91c1c;">Nhập dữ liệu (Restore)</div><div style="font-size: 12px; color: #64748b;">Khôi phục từ file Backup</div></div>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(this)">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="switchMainView('exp')"><div class="nav-icon">📊</div>Chi tiêu</div>
+        <div class="nav-item active" onclick="switchMainView('tasks')"><div class="nav-icon">☑️</div>Nhiệm vụ</div>
+        <div class="nav-item" onclick="switchMainView('notes')"><div class="nav-icon">📝</div>Ghi chú</div>
+        <div class="nav-item" onclick="switchMainView('settings')"><div class="nav-icon">⚙️</div>Cài đặt</div>
+    </div>
+
+    <!-- MODAL: THÊM CHI TIÊU -->
+    <div id="addExpModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="close-modal" onclick="closeModal('addExpModal')">×</div>
+            <h3 style="margin-top:0; text-align: center;">Thêm Giao Dịch</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <div id="btn-type-out" class="type-btn active-out" onclick="setFormType('out')">🔴 Chi tiêu</div>
+                <div id="btn-type-in" class="type-btn" onclick="setFormType('in')">🟢 Thu nhập</div>
+            </div>
+            <select id="expCategory" class="form-select"></select>
+            <input id="expDesc" class="form-input" placeholder="Diễn giải chi tiết..." required>
+            <input id="expAmount" type="number" class="form-input" placeholder="Số tiền (VNĐ)" style="font-size: 18px; font-weight: bold;" required>
+            <button class="btn-submit" onclick="saveExpense()">LƯU GIAO DỊCH</button>
+        </div>
+    </div>
+
+    <!-- MODAL: GHI CHÚ -->
+    <div id="noteModal" class="modal-overlay">
+        <div class="modal-box" style="height: 85vh; display: flex; flex-direction: column;">
+            <div class="close-modal" onclick="closeModal('noteModal')">×</div>
+            <h3 style="margin-top:0; text-align: center;" id="noteModalTitle">Thêm Ghi Chú</h3>
+            <input type="hidden" id="noteId">
+            <input id="noteTitle" class="form-input" placeholder="Tiêu đề..." style="font-size: 16px; font-weight: bold;">
+            <textarea id="noteContent" class="form-input" placeholder="Nội dung..." style="flex: 1; resize: none; font-family: inherit;"></textarea>
+            <button class="btn-submit" onclick="saveNote()">LƯU GHI CHÚ</button>
+        </div>
+    </div>
+
+    <!-- PHẦN LÕI JAVASCRIPT (THAY THẾ PYTHON) -->
+    <script>
+        // --- 1. CẤU HÌNH & DỮ LIỆU TĨNH ---
+        const TASKS = ["1. Dậy sớm trước 8:00", "2. Uống một cốc nước", "3. Đánh răng rửa mặt", "4. Ăn sáng trước 8:00", "5. Không dùng ĐT 30p đầu ngày", "6. Làm việc", "7. Hít đất 200 cái", "8. Kéo xà 100 cái", "9. Uống đủ 2 lít nước", "10. Học 30p kiến thức & Ghi lại", "11. Học tập 1 tiếng"];
+        
+        const CATS = {
+            out: {
+                "Ăn uống": {color: "#f97316", parent: "Sinh hoạt", icon: "🍲"},
+                "Hóa đơn": {color: "#34d399", parent: "Cố định", icon: "🧾"},
+                "Mua sắm": {color: "#facc15", parent: "Sinh hoạt", icon: "🛒"},
+                "Di chuyển": {color: "#60a5fa", parent: "Sinh hoạt", icon: "🚗"},
+                "Giải trí": {color: "#fb7185", parent: "Phát sinh", icon: "🎬"},
+                "Chưa phân loại": {color: "#f472b6", parent: "Khác", icon: "❔"}
+            },
+            parent: {
+                "Sinh hoạt": {color: "#f97316", icon: "📄"},
+                "Phát sinh": {color: "#facc15", icon: "💰"},
+                "Cố định": {color: "#60a5fa", icon: "🏠"},
+                "Khác": {color: "#f472b6", icon: "❔"}
+            },
+            in: {
+                "Tiền lương": {color: "#22c55e", icon: "💵"},
+                "Tiền thưởng": {color: "#3b82f6", icon: "🎁"},
+                "Đầu tư/Lãi": {color: "#8b5cf6", icon: "📈"},
+                "Khác (Thu)": {color: "#ec4899", icon: "💰"}
+            }
+        };
+
+        // --- 2. QUẢN LÝ DỮ LIỆU LOCALSTORAGE ---
+        let appData = { expenses: [], tasks: {}, notes: [] };
+        
+        function loadData() {
+            const saved = localStorage.getItem('BinhApp_Data');
+            if (saved) appData = JSON.parse(saved);
+        }
+        function saveData() { localStorage.setItem('BinhApp_Data', JSON.stringify(appData)); }
+
+        // --- 3. TIỆN ÍCH NGÀY THÁNG ---
+        const today = new Date();
+        let expCurrentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        let taskSelectedDateStr = toDateStr(today);
+
+        function toDateStr(date) { 
+            const offset = date.getTimezoneOffset() * 60000;
+            return (new Date(date - offset)).toISOString().split('T')[0]; 
+        }
+        function formatMoney(num) { return num.toLocaleString('en-US') + 'đ'; }
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+
+        // --- 4. GIAO DIỆN CHÍNH (ĐIỀU HƯỚNG) ---
+        function switchMainView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            const titles = { 'exp': 'Quản lý chi tiêu', 'tasks': 'Kỷ Luật Bản Thân', 'notes': 'Sổ Tay Ghi Chú', 'settings': 'Cài Đặt & Dữ Liệu' };
+            document.getElementById('headerTitle').innerText = titles[viewId];
+
+            if(viewId === 'tasks') renderTasks();
+            if(viewId === 'exp') renderExpenseData();
+            if(viewId === 'notes') renderNotes();
+        }
+
+        // --- 5. LOGIC: NHIỆM VỤ ---
+        function renderTasks() {
+            const containerDate = document.getElementById('task-dates-container');
+            const containerList = document.getElementById('task-list-container');
+            containerDate.innerHTML = ''; containerList.innerHTML = '';
+
+            // Tạo 7 ngày gần nhất
+            for(let i = -3; i <= 3; i++) {
+                let d = new Date(today); d.setDate(today.getDate() + i);
+                let dStr = toDateStr(d);
+                let dayName = i === 0 ? "Hôm nay" : d.toLocaleDateString('vi-VN', {weekday: 'short'});
+                
+                let btn = document.createElement('div');
+                btn.className = `domino-btn ${dStr === taskSelectedDateStr ? 'active' : ''}`;
+                btn.innerText = dayName;
+                btn.onclick = () => { taskSelectedDateStr = dStr; renderTasks(); };
+                containerDate.appendChild(btn);
+
+                if (dStr === taskSelectedDateStr) {
+                    if(!appData.tasks[dStr]) appData.tasks[dStr] = Array(TASKS.length).fill(false);
+                    let myTasks = appData.tasks[dStr];
+                    
+                    containerList.innerHTML = `<h3 style="color:#475569; font-size:14px;">Ngày ${dStr.split('-').reverse().join('/')}</h3>`;
+                    TASKS.forEach((taskName, index) => {
+                        let isDone = myTasks[index];
+                        containerList.innerHTML += `
+                            <div class="task-card">
+                                <span style="font-size:14px; font-weight:500; ${isDone?'text-decoration:line-through; color:#94a3b8':''}">${taskName}</span>
+                                <button style="background:transparent; border:none; font-size:20px; cursor:pointer;" onclick="toggleTask('${dStr}', ${index})">${isDone ? '✅' : '⬜'}</button>
+                            </div>
+                        `;
+                    });
+                }
+            }
+        }
+
+        function toggleTask(dateStr, index) {
+            appData.tasks[dateStr][index] = !appData.tasks[dateStr][index];
+            saveData(); renderTasks();
+        }
+
+        // --- 6. LOGIC: CHI TIÊU ---
+        let expState = { tab: 'out', sub: 'child' };
+        
+        function changeMonth(delta) {
+            expCurrentDate.setMonth(expCurrentDate.getMonth() + delta);
+            renderExpenseData();
+        }
+
+        function setExpTab(tab) {
+            expState.tab = tab;
+            document.getElementById('tab-out').classList.remove('active'); document.getElementById('tab-in').classList.remove('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById('sub-tabs-out').style.display = tab === 'out' ? 'flex' : 'none';
+            renderExpenseData();
+        }
+        function setExpSubTab(sub) {
+            expState.sub = sub;
+            document.getElementById('sub-child').classList.remove('active'); document.getElementById('sub-parent').classList.remove('active');
+            document.getElementById(`sub-${sub}`).classList.add('active');
+            renderExpenseData();
+        }
+
+        function renderExpenseData() {
+            let y = expCurrentDate.getFullYear(), m = expCurrentDate.getMonth() + 1;
+            document.getElementById('exp-month-label').innerText = `📅 Tháng ${m < 10 ? '0'+m : m} / ${y}`;
+
+            let mStart = `${y}-${m < 10 ? '0'+m : m}-01`;
+            let lastDay = new Date(y, m, 0).getDate();
+            let mEnd = `${y}-${m < 10 ? '0'+m : m}-${lastDay}`;
+
+            let txns = appData.expenses.filter(e => e.date >= mStart && e.date <= mEnd);
+            let totalIn = 0, totalOut = 0;
+            let group = {};
+
+            txns.forEach(t => {
+                if (t.type === 'in') { totalIn += t.amount; } else { totalOut += t.amount; }
+                
+                // Gom nhóm cho Chart
+                let validTab = (expState.tab === t.type);
+                if (validTab) {
+                    let key = t.category;
+                    if (expState.tab === 'out' && expState.sub === 'parent') {
+                        key = CATS.out[t.category] ? CATS.out[t.category].parent : "Khác";
+                    }
+                    group[key] = (group[key] || 0) + t.amount;
+                }
+            });
+
+            document.getElementById('exp-total-in').innerText = formatMoney(totalIn);
+            document.getElementById('exp-total-out').innerText = formatMoney(totalOut);
+
+            // Vẽ Chart & List
+            let totalForChart = expState.tab === 'in' ? totalIn : totalOut;
+            let chartArr = Object.keys(group).map(k => ({ name: k, amount: group[k] })).sort((a,b) => b.amount - a.amount);
+            
+            let conic = []; let curPct = 0;
+            let listHtml = "";
+
+            if(chartArr.length === 0) {
+                conic = ["#e2e8f0 0% 100%"];
+                listHtml = '<div style="text-align:center; padding:20px; color:#94a3b8;">Chưa có dữ liệu</div>';
+            } else {
+                chartArr.forEach(c => {
+                    let pct = (c.amount / totalForChart) * 100;
+                    let conf = expState.tab === 'in' ? CATS.in[c.name] : (expState.sub === 'child' ? CATS.out[c.name] : CATS.parent[c.name]);
+                    if(!conf) conf = {color:"#9ca3af", icon:"❔"};
+                    
+                    let nextPct = curPct + pct;
+                    conic.push(`${conf.color} ${curPct}% ${nextPct}%`);
+                    curPct = nextPct;
+
+                    listHtml += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid #f1f5f9;">
+                            <div style="font-size:14px; font-weight:500;"><span style="font-size:20px; background:${conf.color}20; padding:8px; border-radius:10px; margin-right:10px;">${conf.icon}</span>${c.name}</div>
+                            <div style="font-weight:bold;">${formatMoney(c.amount)}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('donutChart').style.background = `conic-gradient(${conic.join(',')})`;
+            document.getElementById('category-list').innerHTML = listHtml;
+        }
+
+        let tempExpType = 'out';
+        function setFormType(type) {
+            tempExpType = type;
+            document.getElementById('btn-type-out').className = `type-btn ${type === 'out' ? 'active-out' : ''}`;
+            document.getElementById('btn-type-in').className = `type-btn ${type === 'in' ? 'active-in' : ''}`;
+            
+            let sel = document.getElementById('expCategory'); sel.innerHTML = '';
+            let dict = type === 'out' ? CATS.out : CATS.in;
+            for(let k in dict) sel.innerHTML += `<option value="${k}">${dict[k].icon} ${k}</option>`;
+        }
+
+        function saveExpense() {
+            let desc = document.getElementById('expDesc').value;
+            let amt = parseInt(document.getElementById('expAmount').value);
+            if(!desc || !amt) return alert("Nhập đủ thông tin!");
+
+            appData.expenses.push({
+                id: generateId(),
+                type: tempExpType,
+                category: document.getElementById('expCategory').value,
+                desc: desc,
+                amount: amt,
+                date: toDateStr(today),
+                time: today.getHours() + ":" + (today.getMinutes()<10?'0':'') + today.getMinutes()
+            });
+            saveData(); closeModal('addExpModal');
+            document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = '';
+            renderExpenseData();
+        }
+
+        // --- 7. LOGIC: GHI CHÚ ---
+        function renderNotes() {
+            let container = document.getElementById('notes-list-container');
+            container.innerHTML = '';
+            
+            let sorted = [...appData.notes].sort((a,b) => b.updated_at.localeCompare(a.updated_at));
+            if(sorted.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">📝<br>Chưa có ghi chú nào</div>'; return;
+            }
+
+            sorted.forEach(n => {
+                container.innerHTML += `
+                    <div class="card" style="position:relative; margin-bottom:15px; padding:18px;">
+                        <div style="font-weight:bold; font-size:16px; margin-bottom:8px; padding-right:40px;">${n.title}</div>
+                        <div style="font-size:14px; color:#475569; white-space:pre-wrap; margin-bottom:12px;">${n.content}</div>
+                        <div style="font-size:11px; color:#94a3b8;">⏱ ${n.updated_at}</div>
+                        <div style="position:absolute; top:15px; right:15px; display:flex; flex-direction:column; gap:10px;">
+                            <span style="font-size:18px; cursor:pointer;" onclick="openNoteModal('${n.id}')">✏️</span>
+                            <span style="font-size:18px; cursor:pointer;" onclick="deleteNote('${n.id}')">🗑️</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openNoteModal(id = null) {
+            document.getElementById('noteId').value = id || "";
+            if (id) {
+                let n = appData.notes.find(x => x.id === id);
+                document.getElementById('noteTitle').value = n.title; document.getElementById('noteContent').value = n.content;
+                document.getElementById('noteModalTitle').innerText = "Sửa Ghi Chú";
+            } else {
+                document.getElementById('noteTitle').value = ""; document.getElementById('noteContent').value = "";
+                document.getElementById('noteModalTitle').innerText = "Thêm Ghi Chú";
+            }
+            openModal('noteModal');
+        }
+
+        function saveNote() {
+            let id = document.getElementById('noteId').value;
+            let t = document.getElementById('noteTitle').value;
+            let c = document.getElementById('noteContent').value;
+            if(!t || !c) return alert("Nhập đủ tiêu đề và nội dung!");
+            
+            let now = new Date().toISOString().replace('T', ' ').slice(0, 16);
+            if (id) {
+                let n = appData.notes.find(x => x.id === id);
+                n.title = t; n.content = c; n.updated_at = now;
+            } else {
+                appData.notes.push({ id: generateId(), title: t, content: c, created_at: now, updated_at: now });
+            }
+            saveData(); closeModal('noteModal'); renderNotes();
+        }
+
+        function deleteNote(id) {
+            if(confirm("Xóa vĩnh viễn ghi chú này?")) {
+                appData.notes = appData.notes.filter(x => x.id !== id);
+                saveData(); renderNotes();
+            }
+        }
+
+        // --- 8. LOGIC: XUẤT NHẬP DỮ LIỆU (APK BACKUP) ---
+        function exportData() {
+            const dataStr = JSON.stringify(appData);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url;
+            a.download = `BinhBackup_${toDateStr(today).replace(/-/g,'')}.json`;
+            a.click();
+        }
+
+        function importData(input) {
+            if (!input.files.length) return;
+            if(!confirm("CẢNH BÁO: Dữ liệu hiện tại sẽ bị GHI ĐÈ hoàn toàn. Bạn chắc chắn chứ?")) return;
+            
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if(imported.tasks && imported.expenses && imported.notes) {
+                        appData = imported; saveData();
+                        alert("Khôi phục thành công!"); location.reload();
+                    } else { alert("File không hợp lệ!"); }
+                } catch (err) { alert("Lỗi đọc file JSON!"); }
+            };
+            reader.readAsText(input.files[0]);
+            input.value = "";
+        }
+
+        // --- CORE UI UTILS ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function setExpView(v, btn) { document.querySelectorAll('.domino-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('exp-tinh-hinh').style.display = v==='tinh-hinh'?'block':'none'; document.getElementById('exp-bien-dong').style.display = v==='bien-dong'?'block':'none'; }
+        function openExpForm() { setFormType(expState.tab); openModal('addExpModal'); }
+
+        // --- KHỞI TẠO APP ---
+        window.onload = () => {
+            loadData();
+            renderTasks();
+        };
+
+    </script>
+</body>
+</html>
