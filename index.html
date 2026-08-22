@@ -233,4 +233,153 @@
             taskMode = mode; document.getElementById('task-tab-week').classList.remove('active'); document.getElementById('task-tab-hist').classList.remove('active');
             document.getElementById(mode === 'week' ? 'task-tab-week' : 'task-tab-hist').classList.add('active');
             document.getElementById('task-history-filters').style.display = mode === 'history' ? 'block' : 'none';
-            if(mode === 'history') { taskSelectedDateStr = `${task
+            if(mode === 'history') { taskSelectedDateStr = `${taskHistY}-${(taskHistM<10?'0':'')+taskHistM}-01`; } else { taskSelectedDateStr = toDateStr(today); }
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const cDate = document.getElementById('task-dates-container'); const cList = document.getElementById('task-list-container'); cDate.innerHTML = ''; cList.innerHTML = '';
+            
+            if(taskMode === 'history') {
+                const cYear = document.getElementById('task-year-container'); const cMonth = document.getElementById('task-month-container'); cYear.innerHTML = ''; cMonth.innerHTML = '';
+                [2024, 2025, 2026].forEach(y => { cYear.innerHTML += `<div class="domino-btn ${y === taskHistY ? 'active':''}" onclick="taskHistY=${y}; renderTasks();">Năm ${y}</div>`; });
+                for(let m=1; m<=12; m++) { cMonth.innerHTML += `<div class="domino-btn ${m === taskHistM ? 'active':''}" onclick="taskHistM=${m}; taskSelectedDateStr='${taskHistY}-${(m<10?'0':'')+m}-01'; renderTasks();">Th.${m}</div>`; }
+                let daysInMonth = new Date(taskHistY, taskHistM, 0).getDate();
+                for(let d=1; d<=daysInMonth; d++) {
+                    let dStr = `${taskHistY}-${(taskHistM<10?'0':'')+taskHistM}-${(d<10?'0':'')+d}`;
+                    cDate.innerHTML += `<div class="domino-btn ${dStr === taskSelectedDateStr ? 'active':''}" onclick="taskSelectedDateStr='${dStr}'; renderTasks();" style="min-width:40px; padding:0;">${d}</div>`;
+                }
+            } else {
+                let curr = new Date();
+                let day = curr.getDay();
+                let diffToMon = curr.getDate() - day + (day === 0 ? -6 : 1);
+                let monday = new Date(curr.setDate(diffToMon));
+                let dayNames = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
+                
+                for(let i = 0; i < 7; i++) {
+                    let d = new Date(monday);
+                    d.setDate(monday.getDate() + i);
+                    let dStr = toDateStr(d);
+                    let dayName = dayNames[i];
+                    if(dStr === toDateStr(today)) dayName = "Hôm nay";
+                    cDate.innerHTML += `<div class="domino-btn ${dStr === taskSelectedDateStr ? 'active':''}" onclick="taskSelectedDateStr='${dStr}'; renderTasks();">${dayName}</div>`;
+                }
+            }
+
+            if(!appData.tasks[taskSelectedDateStr]) appData.tasks[taskSelectedDateStr] = Array(TASKS.length).fill(false);
+            let myTasks = appData.tasks[taskSelectedDateStr];
+            cList.innerHTML = `<h3 style="color:#475569; font-size:14px; border-bottom: 2px solid #e2e8f0; padding-bottom:5px;">Ngày ${taskSelectedDateStr.split('-').reverse().join('/')}</h3>`;
+            TASKS.forEach((tn, idx) => {
+                let isDone = myTasks[idx];
+                cList.innerHTML += `<div class="task-card"><span style="font-size:14px; font-weight:500; ${isDone?'color:#94a3b8':''}">${tn}</span><button style="background:transparent; border:none; font-size:20px; cursor:pointer;" onclick="toggleTask('${taskSelectedDateStr}', ${idx})">${isDone ? '✅' : '⬜'}</button></div>`;
+            });
+        }
+        
+        function toggleTask(dStr, idx) {
+            let isDone = appData.tasks[dStr][idx];
+            if (!isDone) {
+                if (!confirm("Xác nhận bạn đã hoàn thành nhiệm vụ này?")) return;
+            }
+            appData.tasks[dStr][idx] = !isDone;
+            saveData();
+            renderTasks();
+        }
+
+        // ================= CHI TIÊU =================
+        let expState = { tab: 'out', sub: 'child' }; 
+        let momoState = { time: 'month', tab: 'out', sub: 'child' };
+
+        function setExpView(v, btn) { document.querySelectorAll('.domino-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('exp-tinh-hinh').style.display = v==='tinh-hinh'?'block':'none'; document.getElementById('exp-bien-dong').style.display = v==='bien-dong'?'block':'none'; renderExpenseData(); }
+        function changeMonth(d) { expCurrentDate.setMonth(expCurrentDate.getMonth() + d); renderExpenseData(); }
+        function setExpTab(tab) { expState.tab = tab; document.getElementById('tab-out').classList.remove('active'); document.getElementById('tab-in').classList.remove('active'); document.getElementById(`tab-${tab}`).classList.add('active'); document.getElementById('sub-tabs-out').style.display = tab === 'out' ? 'flex' : 'none'; renderExpenseData(); }
+        function setExpSubTab(sub) { expState.sub = sub; document.getElementById('sub-child').classList.remove('active'); document.getElementById('sub-parent').classList.remove('active'); document.getElementById(`sub-${sub}`).classList.add('active'); renderExpenseData(); }
+        
+        function setMomoTime(t) { momoState.time = t; ['week','month','year'].forEach(x => document.getElementById('momo-time-'+x).classList.remove('active')); document.getElementById('momo-time-'+t).classList.add('active'); renderExpenseData(); }
+        function setMomoTab(t) { momoState.tab = t; ['in','out','diff'].forEach(x => document.getElementById('momo-tab-'+x).classList.remove('active-'+x)); document.getElementById('momo-tab-'+t).classList.add('active-'+t); document.getElementById('momo-list-wrapper').style.display = t === 'diff' ? 'none' : 'block'; document.getElementById('momo-sub-tabs').style.display = t === 'out' ? 'flex' : 'none'; renderExpenseData(); }
+        function setMomoSubTab(s) { momoState.sub = s; document.getElementById('momo-sub-child').classList.remove('active'); document.getElementById('momo-sub-parent').classList.remove('active'); document.getElementById('momo-sub-'+s).classList.add('active'); renderExpenseData(); }
+
+        function getTxns(start, end) { return appData.expenses.filter(e => e.date >= start && e.date <= end); }
+        function sumTxns(txns, type, sub) { 
+            let group = {}; let total = 0;
+            txns.filter(t => t.type === type).forEach(t => { total += t.amount; let key = t.category; if(type==='out' && sub==='parent') key = CATS.out[key]?CATS.out[key].p:"Khác"; group[key] = (group[key]||0) + t.amount; });
+            return { total, group };
+        }
+
+        function renderExpenseData() {
+            let y = expCurrentDate.getFullYear(), m = expCurrentDate.getMonth() + 1;
+            document.getElementById('exp-month-label').innerText = `📅 Tháng ${m<10?'0'+m:m} / ${y}`;
+            let mStart = `${y}-${m<10?'0'+m:m}-01`; let mEnd = `${y}-${m<10?'0'+m:m}-${new Date(y,m,0).getDate()}`;
+            let txns = getTxns(mStart, mEnd);
+            let inData = sumTxns(txns, 'in', 'child'); let outData = sumTxns(txns, 'out', expState.sub);
+            document.getElementById('exp-total-in').innerText = formatMoney(inData.total); document.getElementById('exp-total-out').innerText = formatMoney(outData.total);
+            
+            let chartData = expState.tab === 'in' ? inData : outData;
+            let chartArr = Object.keys(chartData.group).map(k => ({n: k, a: chartData.group[k]})).sort((a,b) => b.a - a.a);
+            let conic = []; let curPct = 0; let listHtml = "";
+            if(chartArr.length === 0) { conic = ["#e2e8f0 0% 100%"]; listHtml = '<div style="text-align:center; padding:20px; color:#94a3b8;">Chưa có dữ liệu</div>'; } else {
+                chartArr.forEach(c => {
+                    let pct = (c.a / chartData.total) * 100; let conf = expState.tab === 'in' ? CATS.in[c.n] : (expState.sub === 'child' ? CATS.out[c.n] : CATS.parent[c.n]); if(!conf) conf = {c:"#9ca3af", i:"❔"};
+                    let nextPct = curPct + pct; conic.push(`${conf.c} ${curPct}% ${nextPct}%`); curPct = nextPct;
+                    listHtml += `<div style="display:flex; justify-content:space-between; padding:16px 0; border-bottom:1px solid #f1f5f9;"><div style="font-size:14px; font-weight:500;"><span style="font-size:20px; background:${conf.c}20; padding:8px; border-radius:10px; margin-right:10px;">${conf.i}</span>${c.n}</div><div style="font-weight:bold;">${formatMoney(c.a)}</div></div>`;
+                });
+            }
+            document.getElementById('donutChart').style.background = `conic-gradient(${conic.join(',')})`; document.getElementById('category-list').innerHTML = listHtml;
+
+            if(document.getElementById('exp-bien-dong').style.display === 'block') {
+                let cS, cE, pS, pE, lbl;
+                let ty = today.getFullYear(), tm = today.getMonth() + 1, td = today.getDate();
+                if(momoState.time === 'month') { cS=`${ty}-${(tm<10?'0':'')+tm}-01`; cE=`${ty}-${(tm<10?'0':'')+tm}-${new Date(ty,tm,0).getDate()}`; let pM=tm-1; let pY=ty; if(pM===0){pM=12; pY--;} pS=`${pY}-${(pM<10?'0':'')+pM}-01`; pE=`${pY}-${(pM<10?'0':'')+pM}-${new Date(pY,pM,0).getDate()}`; lbl='tháng'; }
+                else if(momoState.time === 'year') { cS=`${ty}-01-01`; cE=`${ty}-12-31`; pS=`${ty-1}-01-01`; pE=`${ty-1}-12-31`; lbl='năm'; }
+                else { let wDay = today.getDay(); let diff = today.getDate() - wDay + (wDay == 0 ? -6:1); let cW = new Date(today.setDate(diff)); cS = toDateStr(cW); let cWE = new Date(cW); cWE.setDate(cW.getDate()+6); cE = toDateStr(cWE); let pW = new Date(cW); pW.setDate(cW.getDate()-7); pS = toDateStr(pW); let pWE = new Date(pW); pWE.setDate(pW.getDate()+6); pE = toDateStr(pWE); lbl='tuần'; }
+                
+                let cTxns = getTxns(cS, cE); let pTxns = getTxns(pS, pE);
+                let cOut = sumTxns(cTxns, 'out', momoState.sub); let pOut = sumTxns(pTxns, 'out', momoState.sub);
+                let cIn = sumTxns(cTxns, 'in', 'child'); let pIn = sumTxns(pTxns, 'in', 'child');
+                
+                let cVal=0, pVal=0, title="", insight="", color="#3b82f6";
+                if(momoState.tab === 'out') { cVal = cOut.total; pVal = pOut.total; title = `Tổng chi ${lbl} này`; color="#ef4444"; let d = cVal-pVal; insight = d>=0 ? `<span style="color:#ef4444">↗ Tăng ${formatMoney(d)}</span>` : `<span style="color:#22c55e">↘ Giảm ${formatMoney(Math.abs(d))}</span>`; }
+                else if(momoState.tab === 'in') { cVal = cIn.total; pVal = pIn.total; title = `Tổng thu ${lbl} này`; color="#22c55e"; let d = cVal-pVal; insight = d>=0 ? `<span style="color:#22c55e">↗ Tăng ${formatMoney(d)}</span>` : `<span style="color:#ef4444">↘ Giảm ${formatMoney(Math.abs(d))}</span>`; }
+                else { cVal = cIn.total - cOut.total; pVal = pIn.total - pOut.total; title = `Chênh lệch ${lbl} này`; color="#3b82f6"; let d = cVal-pVal; insight = d>=0 ? `<span style="color:#22c55e">↗ Cải thiện ${formatMoney(d)}</span>` : `<span style="color:#ef4444">↘ Thâm hụt ${formatMoney(Math.abs(d))}</span>`; }
+                
+                document.getElementById('momo-summary-title').innerText = title; document.getElementById('momo-summary-amount').innerText = formatMoney(cVal); document.getElementById('momo-summary-insight').innerHTML = `${insight} so với ${lbl} trước`;
+                let maxB = Math.max(Math.abs(cVal), Math.abs(pVal));
+                document.getElementById('momo-bar-prev').style.height = maxB>0 ? ((Math.abs(pVal)/maxB)*110 + "px") : "0px"; document.getElementById('momo-bar-curr').style.height = maxB>0 ? ((Math.abs(cVal)/maxB)*110 + "px") : "0px"; document.getElementById('momo-bar-curr').style.background = color;
+                
+                let lst = document.getElementById('momo-comparison-list'); lst.innerHTML = '';
+                if(momoState.tab !== 'diff') {
+                    let cg = momoState.tab === 'out' ? cOut.group : cIn.group; let pg = momoState.tab === 'out' ? pOut.group : pIn.group;
+                    let keys = Array.from(new Set([...Object.keys(cg), ...Object.keys(pg)]));
+                    if(keys.length === 0) lst.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Không có dữ liệu</div>';
+                    keys.forEach(k => {
+                        let ca = cg[k]||0; let pa = pg[k]||0; let diff = ca - pa; let dh = diff>0 ? `<span style="color:#ef4444">↗ ${formatMoney(diff)}</span>` : (diff<0 ? `<span style="color:#22c55e">↘ ${formatMoney(Math.abs(diff))}</span>` : `<span style="color:#94a3b8">không đổi</span>`);
+                        let conf = momoState.tab === 'in' ? CATS.in[k] : (momoState.sub === 'child' ? CATS.out[k] : CATS.parent[k]); if(!conf) conf = {c:"#9ca3af", i:"❔"};
+                        lst.innerHTML += `<div style="display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid #f1f5f9;"><div style="display:flex; align-items:center; gap:12px;"><span style="font-size:18px; background:${conf.c}15; padding:6px; border-radius:8px;">${conf.i}</span><span style="font-weight:500;">${k}</span></div><div style="text-align:right;"><div style="font-weight:bold;">${formatMoney(ca)}</div><div style="font-size:12px;">${dh}</div></div></div>`;
+                    });
+                }
+            }
+        }
+
+        let tempExpType = 'out';
+        function setFormType(t) { tempExpType = t; document.getElementById('btn-type-out').className = `type-btn ${t === 'out' ? 'active-out' : ''}`; document.getElementById('btn-type-in').className = `type-btn ${t === 'in' ? 'active-in' : ''}`; let sel = document.getElementById('expCategory'); sel.innerHTML = ''; let dict = t === 'out' ? CATS.out : CATS.in; for(let k in dict) sel.innerHTML += `<option value="${k}">${dict[k].i} ${k}</option>`; }
+        function saveExpense() { let d = document.getElementById('expDesc').value; let a = parseInt(document.getElementById('expAmount').value); if(!d || !a) return alert("Nhập đủ thông tin!"); appData.expenses.push({ id: genId(), type: tempExpType, category: document.getElementById('expCategory').value, desc: d, amount: a, date: toDateStr(today), time: today.getHours()+":"+(today.getMinutes()<10?'0':'')+today.getMinutes() }); saveData(); closeModal('addExpModal'); document.getElementById('expDesc').value=''; document.getElementById('expAmount').value=''; renderExpenseData(); }
+
+        // ================= GHI CHÚ =================
+        function renderNotes() {
+            let c = document.getElementById('notes-list-container'); c.innerHTML = ''; let sorted = [...appData.notes].sort((a,b) => b.updated_at.localeCompare(a.updated_at));
+            if(sorted.length === 0) { c.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">📝<br>Chưa có ghi chú nào</div>'; return; }
+            sorted.forEach(n => { c.innerHTML += `<div class="card" style="position:relative; margin-bottom:15px; padding:18px;"><div style="font-weight:bold; font-size:16px; margin-bottom:8px; padding-right:40px;">${n.title}</div><div style="font-size:14px; color:#475569; white-space:pre-wrap; margin-bottom:12px;">${n.content}</div><div style="font-size:11px; color:#94a3b8;">⏱ ${n.updated_at}</div><div style="position:absolute; top:15px; right:15px; display:flex; flex-direction:column; gap:10px;"><span style="font-size:18px; cursor:pointer;" onclick="openNoteModal('${n.id}')">✏️</span><span style="font-size:18px; cursor:pointer;" onclick="deleteNote('${n.id}')">🗑️</span></div></div>`; });
+        }
+        function openNoteModal(id = null) { document.getElementById('noteId').value = id||""; if (id) { let n = appData.notes.find(x => x.id === id); document.getElementById('noteTitle').value = n.title; document.getElementById('noteContent').value = n.content; document.getElementById('noteModalTitle').innerText = "Sửa Ghi Chú"; } else { document.getElementById('noteTitle').value = ""; document.getElementById('noteContent').value = ""; document.getElementById('noteModalTitle').innerText = "Thêm Ghi Chú"; } openModal('noteModal'); }
+        function saveNote() { let id = document.getElementById('noteId').value; let t = document.getElementById('noteTitle').value; let c = document.getElementById('noteContent').value; if(!t || !c) return alert("Nhập đủ thông tin!"); let now = new Date().toISOString().replace('T', ' ').slice(0, 16); if(id) { let n = appData.notes.find(x => x.id === id); n.title=t; n.content=c; n.updated_at=now; } else { appData.notes.push({ id: genId(), title: t, content: c, created_at: now, updated_at: now }); } saveData(); closeModal('noteModal'); renderNotes(); }
+        function deleteNote(id) { if(confirm("Xóa ghi chú?")) { appData.notes = appData.notes.filter(x => x.id !== id); saveData(); renderNotes(); } }
+
+        // ================= CÀI ĐẶT =================
+        function exportData() { const blob = new Blob([JSON.stringify(appData)], {type:"application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `BinhBackup_${toDateStr(today).replace(/-/g,'')}.json`; a.click(); }
+        function importData(input) { if(!input.files.length) return; if(!confirm("GHI ĐÈ TOÀN BỘ?")) return; const r = new FileReader(); r.onload = e => { try { let imp = JSON.parse(e.target.result); if(imp.tasks) { appData = imp; saveData(); alert("Khôi phục thành công!"); location.reload(); } else alert("Lỗi định dạng!"); } catch(err) { alert("Lỗi đọc file!"); } }; r.readAsText(input.files[0]); input.value = ""; }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; if(id==='addExpModal') setFormType(expState.tab); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        window.onload = () => { loadData(); renderTasks(); };
+    </script>
+</body>
+</html>
