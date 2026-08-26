@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Binh Ky Luat App</title>
-    <link rel="manifest" href="manifest.json">
-    <script>
-        if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('sw.js'); }); }
-    </script>
     <style>
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8f9fa; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -18,11 +14,13 @@
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #94a3b8; font-size: 11px; font-weight: bold; cursor: pointer; }
         .nav-item.active { color: #d82d8b; }
         .nav-icon { font-size: 24px; margin-bottom: 2px; }
-        .view-section { display: none; } .view-section.active { display: block; }
+        .view-section { display: none; } 
+        .view-section.active { display: block; }
         
-        /* CHUNG */
         .card { background: white; border-radius: 16px; padding: 20px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-bottom: 15px; }
         .btn-add-main { width: 100%; padding: 16px; background: linear-gradient(to right, #d82d8b, #f472b6); color: white; border: none; border-radius: 14px; font-weight: bold; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        
+        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 100; justify-content: center; align-items: flex-end; }
         .modal-box { background: white; width: 100%; padding: 20px; border-radius: 20px 20px 0 0; position: relative; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out;}
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -30,32 +28,30 @@
         .form-input, .form-select { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; background: #f8f9fa; outline: none; }
         .btn-submit { width: 100%; padding: 14px; background: #d82d8b; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; }
         
-        /* CHI TIÊU */
-        .summary-header { display: flex; gap: 10px; margin-bottom: 15px; }
-        .summary-box { flex: 1; background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        /* Tabs & Buttons */
         .list-header { display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 10px; }
         .list-header-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; color: #64748b; margin-bottom: -1px; cursor: pointer;}
-        .tab-out.active { color: #ef4444; border-bottom: 2px solid #ef4444; font-weight: bold; }
-        .tab-in.active { color: #22c55e; border-bottom: 2px solid #22c55e; font-weight: bold; }
         .sub-tab.active { color: #d82d8b; border-bottom: 2px solid #d82d8b; font-weight: bold; }
-        .donut-wrapper { position: relative; width: 180px; height: 180px; display: flex; justify-content: center; align-items: center; margin: 0 auto;}
-        .donut-chart { width: 100%; height: 100%; border-radius: 50%; }
-        .donut-hole { width: 100px; height: 100px; background: white; border-radius: 50%; position: absolute; }
         .type-btn { flex: 1; padding: 12px; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; color: #64748b; font-weight: bold; font-size: 13px; cursor: pointer; }
-        .type-btn.active-out { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
-        .type-btn.active-in { border-color: #22c55e; color: #22c55e; background: #f0fdf4; }
-        .type-btn.active-diff { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
-        .momo-time-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 15px; }
-        .momo-time-tab { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; color: #64748b; cursor: pointer; border-radius: 8px; font-weight: 500;}
-        .momo-time-tab.active { background: white; color: #d82d8b; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-        /* NHIỆM VỤ & KHÁC */
+        
         .domino-container { display: flex; overflow-x: auto; padding: 10px 0; margin-bottom: 5px; gap: 10px;}
         .domino-container::-webkit-scrollbar { display: none; } 
         .domino-btn { flex: 0 0 auto; min-width: 60px; padding: 0 15px; height: 42px; background: white; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; color: #475569;}
         .domino-btn.active { background: #d82d8b; color: white; border-color: #d82d8b; }
-        .task-card { background: white; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .setting-btn { display: flex; align-items: center; gap: 15px; background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 15px; cursor: pointer; }
+        
+        /* Chi tiêu specific */
+        .tab-out.active { color: #ef4444; border-bottom: 2px solid #ef4444; font-weight: bold; }
+        .tab-in.active { color: #22c55e; border-bottom: 2px solid #22c55e; font-weight: bold; }
+        .type-btn.active-out { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+        .type-btn.active-in { border-color: #22c55e; color: #22c55e; background: #f0fdf4; }
+        .type-btn.active-diff { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+        .donut-wrapper { position: relative; width: 180px; height: 180px; display: flex; justify-content: center; align-items: center; margin: 0 auto;}
+        .donut-chart { width: 100%; height: 100%; border-radius: 50%; }
+        .donut-hole { width: 100px; height: 100px; background: white; border-radius: 50%; position: absolute; }
+        
+        /* Nhiệm vụ specific */
+        .task-card { background: white; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .task-card.done { opacity: 0.5; background: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -69,7 +65,7 @@
         
         <!-- ================= VIEW CHI TIÊU ================= -->
         <div id="view-exp" class="view-section">
-            <div class="domino-container" style="margin-bottom: 15px; padding: 0;">
+            <div class="domino-container" id="exp-view-toggles" style="margin-bottom: 15px; padding: 0;">
                 <div class="domino-btn active" style="flex: 1;" onclick="setExpView('tinh-hinh', this)">Tình hình thu chi</div>
                 <div class="domino-btn" style="flex: 1;" onclick="setExpView('bien-dong', this)">Biến động số dư</div>
             </div>
@@ -82,9 +78,9 @@
                     <div onclick="changeMonth(1)" style="font-size: 18px; color: #d82d8b; font-weight: bold; cursor: pointer; padding: 0 10px;">▶</div>
                 </div>
                 
-                <div class="summary-header">
-                    <div class="summary-box"><div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">↗ Tổng Chi</div><div style="font-size: 18px; font-weight: bold;" id="exp-total-out">0đ</div></div>
-                    <div class="summary-box"><div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">↙ Tổng Thu</div><div style="font-size: 18px; font-weight: bold;" id="exp-total-in">0đ</div></div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1; background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;"><div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">↗ Tổng Chi</div><div style="font-size: 18px; font-weight: bold;" id="exp-total-out">0đ</div></div>
+                    <div style="flex: 1; background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;"><div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">↙ Tổng Thu</div><div style="font-size: 18px; font-weight: bold;" id="exp-total-in">0đ</div></div>
                 </div>
 
                 <button class="btn-add-main" onclick="openModal('addExpModal')">+ Nhập giao dịch</button>
@@ -105,7 +101,7 @@
 
             <!-- Biến động chi tiêu -->
             <div id="exp-bien-dong" style="display: none;">
-                <div class="momo-time-tabs">
+                <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 15px;">
                     <div class="momo-time-tab" id="momo-time-week" onclick="setMomoTime('week')">Theo tuần</div>
                     <div class="momo-time-tab active" id="momo-time-month" onclick="setMomoTime('month')">Theo tháng</div>
                     <div class="momo-time-tab" id="momo-time-year" onclick="setMomoTime('year')">Theo năm</div>
@@ -156,22 +152,21 @@
             <div id="task-list-container"></div>
         </div>
 
-        <!-- ================= VIEW GHI CHÚ ================= -->
+        <!-- ================= VIEW GHI CHÚ & CÀI ĐẶT ================= -->
         <div id="view-notes" class="view-section">
             <button class="btn-add-main" onclick="openNoteModal()">+ Viết Ghi Chú Mới</button>
             <div id="notes-list-container"></div>
         </div>
-
-        <!-- ================= VIEW CÀI ĐẶT ================= -->
+        
         <div id="view-settings" class="view-section">
             <div class="card">
                 <h3 style="margin-top:0; color:#1e293b; font-size: 16px;">Sao Lưu & Khôi Phục</h3>
                 <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Dữ liệu lưu offline. Đóng gói thành file Backup để mang sang máy khác.</p>
-                <div class="setting-btn" style="background: #eff6ff; border-color: #bfdbfe;" onclick="exportData()">
+                <div style="display: flex; align-items: center; gap: 15px; background: #eff6ff; padding: 20px; border-radius: 16px; border: 1px solid #bfdbfe; margin-bottom: 15px; cursor: pointer;" onclick="exportData()">
                     <div style="font-size: 28px; background: white; padding: 8px; border-radius: 12px;">⬇️</div>
                     <div><div style="font-weight: bold; color: #1d4ed8;">Xuất dữ liệu (Backup)</div><div style="font-size: 12px; color: #64748b;">Lưu file BinhBackup.json</div></div>
                 </div>
-                <div class="setting-btn" style="background: #fef2f2; border-color: #fecaca;" onclick="document.getElementById('importFile').click()">
+                <div style="display: flex; align-items: center; gap: 15px; background: #fef2f2; padding: 20px; border-radius: 16px; border: 1px solid #fecaca; margin-bottom: 15px; cursor: pointer;" onclick="document.getElementById('importFile').click()">
                     <div style="font-size: 28px; background: white; padding: 8px; border-radius: 12px;">⬆️</div>
                     <div><div style="font-weight: bold; color: #b91c1c;">Nhập dữ liệu (Restore)</div><div style="font-size: 12px; color: #64748b;">Khôi phục từ file Backup</div></div>
                 </div>
@@ -191,9 +186,13 @@
     <div id="addExpModal" class="modal-overlay">
         <div class="modal-box"><div class="close-modal" onclick="closeModal('addExpModal')">×</div><h3 style="margin-top:0; text-align: center;">Thêm Giao Dịch</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <div id="btn-type-out" class="type-btn active-out" onclick="setFormType('out')">🔴 Chi tiêu</div><div id="btn-type-in" class="type-btn" onclick="setFormType('in')">🟢 Thu nhập</div>
+                <div id="btn-type-out" class="type-btn active-out" onclick="setFormType('out')">🔴 Chi tiêu</div>
+                <div id="btn-type-in" class="type-btn" onclick="setFormType('in')">🟢 Thu nhập</div>
             </div>
-            <select id="expCategory" class="form-select"></select><input id="expDesc" class="form-input" placeholder="Diễn giải chi tiết..." required><input id="expAmount" type="number" class="form-input" placeholder="Số tiền (VNĐ)" style="font-size: 18px; font-weight: bold;" required><button class="btn-submit" onclick="saveExpense()">LƯU GIAO DỊCH</button>
+            <select id="expCategory" class="form-select"></select>
+            <input id="expDesc" class="form-input" placeholder="Diễn giải chi tiết..." required>
+            <input id="expAmount" type="number" class="form-input" placeholder="Số tiền (VNĐ)" style="font-size: 18px; font-weight: bold;" required>
+            <button class="btn-submit" onclick="saveExpense()">LƯU GIAO DỊCH</button>
         </div>
     </div>
 
@@ -206,179 +205,396 @@
 
     <script>
         const TASKS = ["1. Dậy sớm < 8:00", "2. Uống 1 cốc nước", "3. Đánh răng rửa mặt", "4. Ăn sáng < 8:00", "5. Không ĐT 30p đầu ngày", "6. Làm việc", "7. Hít đất 200 cái", "8. Kéo xà 100 cái", "9. Uống 2 lít nước", "10. Học 30p & Ghi lại", "11. Học tập 1 tiếng"];
-        const CATS = { out: { "Ăn uống": {c: "#f97316", p: "Sinh hoạt", i: "🍲"}, "Hóa đơn": {c: "#34d399", p: "Cố định", i: "🧾"}, "Mua sắm": {c: "#facc15", p: "Sinh hoạt", i: "🛒"}, "Di chuyển": {c: "#60a5fa", p: "Sinh hoạt", i: "🚗"}, "Giải trí": {c: "#fb7185", p: "Phát sinh", i: "🎬"}, "Chưa phân loại": {c: "#f472b6", p: "Khác", i: "❔"} }, parent: { "Sinh hoạt": {c: "#f97316", i: "📄"}, "Phát sinh": {c: "#facc15", i: "💰"}, "Cố định": {c: "#60a5fa", i: "🏠"}, "Khác": {c: "#f472b6", i: "❔"} }, in: { "Tiền lương": {c: "#22c55e", i: "💵"}, "Tiền thưởng": {c: "#3b82f6", i: "🎁"}, "Đầu tư/Lãi": {c: "#8b5cf6", i: "📈"}, "Khác (Thu)": {c: "#ec4899", i: "💰"} } };
+        const CATS = { 
+            out: { "Ăn uống": {c: "#f97316", p: "Sinh hoạt", i: "🍲"}, "Hóa đơn": {c: "#34d399", p: "Cố định", i: "🧾"}, "Mua sắm": {c: "#facc15", p: "Sinh hoạt", i: "🛒"}, "Di chuyển": {c: "#60a5fa", p: "Sinh hoạt", i: "🚗"}, "Giải trí": {c: "#fb7185", p: "Phát sinh", i: "🎬"}, "Chưa phân loại": {c: "#f472b6", p: "Khác", i: "❔"} }, 
+            parent: { "Sinh hoạt": {c: "#f97316", i: "📄"}, "Phát sinh": {c: "#facc15", i: "💰"}, "Cố định": {c: "#60a5fa", i: "🏠"}, "Khác": {c: "#f472b6", i: "❔"} }, 
+            in: { "Tiền lương": {c: "#22c55e", i: "💵"}, "Tiền thưởng": {c: "#3b82f6", i: "🎁"}, "Đầu tư/Lãi": {c: "#8b5cf6", i: "📈"}, "Khác (Thu)": {c: "#ec4899", i: "💰"} } 
+        };
 
         let appData = { expenses: [], tasks: {}, notes: [] };
-        function loadData() { const d = localStorage.getItem('BinhApp_Data'); if(d) appData = JSON.parse(d); }
-        function saveData() { localStorage.setItem('BinhApp_Data', JSON.stringify(appData)); }
+        
+        function loadData() { 
+            const d = localStorage.getItem('BinhApp_Data'); 
+            if(d) appData = JSON.parse(d); 
+        }
+        
+        function saveData() { 
+            localStorage.setItem('BinhApp_Data', JSON.stringify(appData)); 
+        }
 
-        const today = new Date(); let expCurrentDate = new Date(today.getFullYear(), today.getMonth(), 1); 
-        let taskSelectedDateStr = toDateStr(today); let taskMode = 'week'; let taskHistY = today.getFullYear(); let taskHistM = today.getMonth() + 1;
+        const today = new Date(); 
+        let expCurrentDate = new Date(today.getFullYear(), today.getMonth(), 1); 
+        let taskSelectedDateStr = toDateStr(today); 
+        let taskMode = 'week'; 
+        let taskHistY = today.getFullYear(); 
+        let taskHistM = today.getMonth() + 1;
 
-        function toDateStr(d) { const offset = d.getTimezoneOffset() * 60000; return (new Date(d - offset)).toISOString().split('T')[0]; }
-        function formatMoney(num) { return num.toLocaleString('en-US') + 'đ'; }
-        function genId() { return Math.random().toString(36).substr(2, 9); }
+        function toDateStr(d) { 
+            const offset = d.getTimezoneOffset() * 60000; 
+            return (new Date(d - offset)).toISOString().split('T')[0]; 
+        }
+        
+        function formatMoney(num) { 
+            return num.toLocaleString('en-US') + 'đ'; 
+        }
+        
+        function genId() { 
+            return Math.random().toString(36).substr(2, 9); 
+        }
 
         function switchMainView(id) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active'); event.currentTarget.classList.add('active');
+            document.getElementById('view-' + id).classList.add('active'); 
+            event.currentTarget.classList.add('active');
+            
             const titles = { 'exp': 'Quản lý chi tiêu', 'tasks': 'Kỷ Luật Bản Thân', 'notes': 'Sổ Tay Ghi Chú', 'settings': 'Cài Đặt & Dữ Liệu' };
             document.getElementById('headerTitle').innerText = titles[id];
-            if(id === 'tasks') renderTasks(); if(id === 'exp') renderExpenseData(); if(id === 'notes') renderNotes();
+            
+            if(id === 'tasks') renderTasks(); 
+            if(id === 'exp') renderExpenseData(); 
+            if(id === 'notes') renderNotes();
         }
 
-        // ================= NHIỆM VỤ (CHUẨN THỨ 2 - CN & CÓ XÁC NHẬN) =================
+        // ================= NHIỆM VỤ =================
         function setTaskMode(mode) {
-            taskMode = mode; document.getElementById('task-tab-week').classList.remove('active'); document.getElementById('task-tab-hist').classList.remove('active');
+            taskMode = mode; 
+            document.getElementById('task-tab-week').classList.remove('active'); 
+            document.getElementById('task-tab-hist').classList.remove('active');
+            
             document.getElementById(mode === 'week' ? 'task-tab-week' : 'task-tab-hist').classList.add('active');
             document.getElementById('task-history-filters').style.display = mode === 'history' ? 'block' : 'none';
-            if(mode === 'history') { taskSelectedDateStr = `${taskHistY}-${(taskHistM<10?'0':'')+taskHistM}-01`; } else { taskSelectedDateStr = toDateStr(today); }
+            
+            if(mode === 'history') { 
+                taskSelectedDateStr = `${taskHistY}-${(taskHistM<10?'0':'')+taskHistM}-01`; 
+            } else { 
+                taskSelectedDateStr = toDateStr(today); 
+            }
             renderTasks();
         }
 
         function renderTasks() {
-            const cDate = document.getElementById('task-dates-container'); const cList = document.getElementById('task-list-container'); cDate.innerHTML = ''; cList.innerHTML = '';
+            const cDate = document.getElementById('task-dates-container'); 
+            const cList = document.getElementById('task-list-container'); 
+            cDate.innerHTML = ''; 
+            cList.innerHTML = '';
             
             if(taskMode === 'history') {
-                const cYear = document.getElementById('task-year-container'); const cMonth = document.getElementById('task-month-container'); cYear.innerHTML = ''; cMonth.innerHTML = '';
-                [2024, 2025, 2026].forEach(y => { cYear.innerHTML += `<div class="domino-btn ${y === taskHistY ? 'active':''}" onclick="taskHistY=${y}; renderTasks();">Năm ${y}</div>`; });
-                for(let m=1; m<=12; m++) { cMonth.innerHTML += `<div class="domino-btn ${m === taskHistM ? 'active':''}" onclick="taskHistM=${m}; taskSelectedDateStr='${taskHistY}-${(m<10?'0':'')+m}-01'; renderTasks();">Th.${m}</div>`; }
+                const cYear = document.getElementById('task-year-container'); 
+                const cMonth = document.getElementById('task-month-container'); 
+                cYear.innerHTML = ''; 
+                cMonth.innerHTML = '';
+                
+                [2024, 2025, 2026].forEach(y => { 
+                    cYear.innerHTML += `<div class="domino-btn ${y === taskHistY ? 'active':''}" onclick="taskHistY=${y}; renderTasks();">Năm ${y}</div>`; 
+                });
+                
+                for(let m=1; m<=12; m++) { 
+                    cMonth.innerHTML += `<div class="domino-btn ${m === taskHistM ? 'active':''}" onclick="taskHistM=${m}; taskSelectedDateStr='${taskHistY}-${(m<10?'0':'')+m}-01'; renderTasks();">Th.${m}</div>`; 
+                }
+                
                 let daysInMonth = new Date(taskHistY, taskHistM, 0).getDate();
                 for(let d=1; d<=daysInMonth; d++) {
                     let dStr = `${taskHistY}-${(taskHistM<10?'0':'')+taskHistM}-${(d<10?'0':'')+d}`;
                     cDate.innerHTML += `<div class="domino-btn ${dStr === taskSelectedDateStr ? 'active':''}" onclick="taskSelectedDateStr='${dStr}'; renderTasks();" style="min-width:40px; padding:0;">${d}</div>`;
                 }
             } else {
-                let curr = new Date();
-                let day = curr.getDay();
+                let curr = new Date(); 
+                let day = curr.getDay(); 
                 let diffToMon = curr.getDate() - day + (day === 0 ? -6 : 1);
-                let monday = new Date(curr.setDate(diffToMon));
+                let monday = new Date(curr.setDate(diffToMon)); 
                 let dayNames = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
                 
                 for(let i = 0; i < 7; i++) {
-                    let d = new Date(monday);
-                    d.setDate(monday.getDate() + i);
-                    let dStr = toDateStr(d);
+                    let d = new Date(monday); 
+                    d.setDate(monday.getDate() + i); 
+                    let dStr = toDateStr(d); 
                     let dayName = dayNames[i];
-                    if(dStr === toDateStr(today)) dayName = "Hôm nay";
+                    if(dStr === toDateStr(new Date())) dayName = "Hôm nay";
                     cDate.innerHTML += `<div class="domino-btn ${dStr === taskSelectedDateStr ? 'active':''}" onclick="taskSelectedDateStr='${dStr}'; renderTasks();">${dayName}</div>`;
                 }
             }
 
-            if(!appData.tasks[taskSelectedDateStr]) appData.tasks[taskSelectedDateStr] = Array(TASKS.length).fill(false);
+            if(!appData.tasks[taskSelectedDateStr]) {
+                appData.tasks[taskSelectedDateStr] = Array(TASKS.length).fill(false);
+            }
+            
             let myTasks = appData.tasks[taskSelectedDateStr];
             cList.innerHTML = `<h3 style="color:#475569; font-size:14px; border-bottom: 2px solid #e2e8f0; padding-bottom:5px;">Ngày ${taskSelectedDateStr.split('-').reverse().join('/')}</h3>`;
+            
             TASKS.forEach((tn, idx) => {
                 let isDone = myTasks[idx];
-                cList.innerHTML += `<div class="task-card"><span style="font-size:14px; font-weight:500; ${isDone?'color:#94a3b8':''}">${tn}</span><button style="background:transparent; border:none; font-size:20px; cursor:pointer;" onclick="toggleTask('${taskSelectedDateStr}', ${idx})">${isDone ? '✅' : '⬜'}</button></div>`;
+                
+                if (isDone) {
+                    // YÊU CẦU 1: Làm mờ, KHÔNG gạch ngang chữ, Ẩn nút bấm để không sửa được nữa
+                    cList.innerHTML += `
+                        <div class="task-card done">
+                            <span style="font-size:14px; font-weight:500; color: #94a3b8;">${tn}</span>
+                            <span style="font-size:20px;">✅</span>
+                        </div>`;
+                } else {
+                    // Chưa xong: Có nút bấm để chọn
+                    cList.innerHTML += `
+                        <div class="task-card">
+                            <span style="font-size:14px; font-weight:500; color: #1e293b;">${tn}</span>
+                            <button style="background:transparent; border:none; font-size:20px; cursor:pointer;" onclick="toggleTask('${taskSelectedDateStr}', ${idx})">⬜</button>
+                        </div>`;
+                }
             });
         }
         
         function toggleTask(dStr, idx) {
             let isDone = appData.tasks[dStr][idx];
             if (!isDone) {
-                if (!confirm("Xác nhận bạn đã hoàn thành nhiệm vụ này?")) return;
+                if (confirm("Xác nhận bạn ĐÃ HOÀN THÀNH nhiệm vụ này? (Đánh dấu xong sẽ không thể hủy)")) {
+                    appData.tasks[dStr][idx] = true;
+                    saveData(); 
+                    renderTasks();
+                }
             }
-            appData.tasks[dStr][idx] = !isDone;
-            saveData();
-            renderTasks();
         }
 
         // ================= CHI TIÊU =================
         let expState = { tab: 'out', sub: 'child' }; 
         let momoState = { time: 'month', tab: 'out', sub: 'child' };
-
-        function setExpView(v, btn) { document.querySelectorAll('.domino-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('exp-tinh-hinh').style.display = v==='tinh-hinh'?'block':'none'; document.getElementById('exp-bien-dong').style.display = v==='bien-dong'?'block':'none'; renderExpenseData(); }
-        function changeMonth(d) { expCurrentDate.setMonth(expCurrentDate.getMonth() + d); renderExpenseData(); }
-        function setExpTab(tab) { expState.tab = tab; document.getElementById('tab-out').classList.remove('active'); document.getElementById('tab-in').classList.remove('active'); document.getElementById(`tab-${tab}`).classList.add('active'); document.getElementById('sub-tabs-out').style.display = tab === 'out' ? 'flex' : 'none'; renderExpenseData(); }
-        function setExpSubTab(sub) { expState.sub = sub; document.getElementById('sub-child').classList.remove('active'); document.getElementById('sub-parent').classList.remove('active'); document.getElementById(`sub-${sub}`).classList.add('active'); renderExpenseData(); }
         
-        function setMomoTime(t) { momoState.time = t; ['week','month','year'].forEach(x => document.getElementById('momo-time-'+x).classList.remove('active')); document.getElementById('momo-time-'+t).classList.add('active'); renderExpenseData(); }
-        function setMomoTab(t) { momoState.tab = t; ['in','out','diff'].forEach(x => document.getElementById('momo-tab-'+x).classList.remove('active-'+x)); document.getElementById('momo-tab-'+t).classList.add('active-'+t); document.getElementById('momo-list-wrapper').style.display = t === 'diff' ? 'none' : 'block'; document.getElementById('momo-sub-tabs').style.display = t === 'out' ? 'flex' : 'none'; renderExpenseData(); }
-        function setMomoSubTab(s) { momoState.sub = s; document.getElementById('momo-sub-child').classList.remove('active'); document.getElementById('momo-sub-parent').classList.remove('active'); document.getElementById('momo-sub-'+s).classList.add('active'); renderExpenseData(); }
+        function setExpView(v, btn) { 
+            document.getElementById('exp-view-toggles').querySelectorAll('.domino-btn').forEach(b=>b.classList.remove('active')); 
+            btn.classList.add('active'); 
+            document.getElementById('exp-tinh-hinh').style.display = v==='tinh-hinh'?'block':'none'; 
+            document.getElementById('exp-bien-dong').style.display = v==='bien-dong'?'block':'none'; 
+            renderExpenseData(); 
+        }
+        
+        function changeMonth(d) { expCurrentDate.setMonth(expCurrentDate.getMonth() + d); renderExpenseData(); }
+        
+        function setExpTab(tab) { 
+            expState.tab = tab; 
+            document.getElementById('tab-out').classList.remove('active'); 
+            document.getElementById('tab-in').classList.remove('active'); 
+            document.getElementById(`tab-${tab}`).classList.add('active'); 
+            document.getElementById('sub-tabs-out').style.display = tab === 'out' ? 'flex' : 'none'; 
+            renderExpenseData(); 
+        }
+        
+        function setExpSubTab(sub) { 
+            expState.sub = sub; 
+            document.getElementById('sub-child').classList.remove('active'); 
+            document.getElementById('sub-parent').classList.remove('active'); 
+            document.getElementById(`sub-${sub}`).classList.add('active'); 
+            renderExpenseData(); 
+        }
+        
+        function setMomoTime(t) { 
+            momoState.time = t; 
+            ['week','month','year'].forEach(x => document.getElementById('momo-time-'+x).classList.remove('active')); 
+            document.getElementById('momo-time-'+t).classList.add('active'); 
+            renderExpenseData(); 
+        }
+        
+        function setMomoTab(t) { 
+            momoState.tab = t; 
+            ['in','out','diff'].forEach(x => document.getElementById('momo-tab-'+x).classList.remove('active-'+x)); 
+            document.getElementById('momo-tab-'+t).classList.add('active-'+t); 
+            document.getElementById('momo-list-wrapper').style.display = t === 'diff' ? 'none' : 'block'; 
+            document.getElementById('momo-sub-tabs').style.display = t === 'out' ? 'flex' : 'none'; 
+            renderExpenseData(); 
+        }
+        
+        function setMomoSubTab(s) { 
+            momoState.sub = s; 
+            document.getElementById('momo-sub-child').classList.remove('active'); 
+            document.getElementById('momo-sub-parent').classList.remove('active'); 
+            document.getElementById('momo-sub-'+s).classList.add('active'); 
+            renderExpenseData(); 
+        }
 
-        function getTxns(start, end) { return appData.expenses.filter(e => e.date >= start && e.date <= end); }
+        function getTxns(start, end) { 
+            return appData.expenses.filter(e => e.date >= start && e.date <= end); 
+        }
+        
         function sumTxns(txns, type, sub) { 
-            let group = {}; let total = 0;
-            txns.filter(t => t.type === type).forEach(t => { total += t.amount; let key = t.category; if(type==='out' && sub==='parent') key = CATS.out[key]?CATS.out[key].p:"Khác"; group[key] = (group[key]||0) + t.amount; });
-            return { total, group };
+            let group = {}; let total = 0; 
+            txns.filter(t => t.type === type).forEach(t => { 
+                total += t.amount; 
+                let key = t.category; 
+                if(type==='out' && sub==='parent') key = CATS.out[key]?CATS.out[key].p:"Khác"; 
+                group[key] = (group[key]||0) + t.amount; 
+            }); 
+            return { total, group }; 
         }
 
         function renderExpenseData() {
             let y = expCurrentDate.getFullYear(), m = expCurrentDate.getMonth() + 1;
             document.getElementById('exp-month-label').innerText = `📅 Tháng ${m<10?'0'+m:m} / ${y}`;
-            let mStart = `${y}-${m<10?'0'+m:m}-01`; let mEnd = `${y}-${m<10?'0'+m:m}-${new Date(y,m,0).getDate()}`;
-            let txns = getTxns(mStart, mEnd);
-            let inData = sumTxns(txns, 'in', 'child'); let outData = sumTxns(txns, 'out', expState.sub);
-            document.getElementById('exp-total-in').innerText = formatMoney(inData.total); document.getElementById('exp-total-out').innerText = formatMoney(outData.total);
+            let mStart = `${y}-${m<10?'0'+m:m}-01`; 
+            let mEnd = `${y}-${m<10?'0'+m:m}-${new Date(y,m,0).getDate()}`;
             
-            let chartData = expState.tab === 'in' ? inData : outData;
+            let txns = getTxns(mStart, mEnd); 
+            let inData = sumTxns(txns, 'in', 'child'); 
+            let outData = sumTxns(txns, 'out', expState.sub);
+            
+            document.getElementById('exp-total-in').innerText = formatMoney(inData.total); 
+            document.getElementById('exp-total-out').innerText = formatMoney(outData.total);
+            
+            let chartData = expState.tab === 'in' ? inData : outData; 
             let chartArr = Object.keys(chartData.group).map(k => ({n: k, a: chartData.group[k]})).sort((a,b) => b.a - a.a);
+            
             let conic = []; let curPct = 0; let listHtml = "";
-            if(chartArr.length === 0) { conic = ["#e2e8f0 0% 100%"]; listHtml = '<div style="text-align:center; padding:20px; color:#94a3b8;">Chưa có dữ liệu</div>'; } else {
-                chartArr.forEach(c => {
-                    let pct = (c.a / chartData.total) * 100; let conf = expState.tab === 'in' ? CATS.in[c.n] : (expState.sub === 'child' ? CATS.out[c.n] : CATS.parent[c.n]); if(!conf) conf = {c:"#9ca3af", i:"❔"};
-                    let nextPct = curPct + pct; conic.push(`${conf.c} ${curPct}% ${nextPct}%`); curPct = nextPct;
-                    listHtml += `<div style="display:flex; justify-content:space-between; padding:16px 0; border-bottom:1px solid #f1f5f9;"><div style="font-size:14px; font-weight:500;"><span style="font-size:20px; background:${conf.c}20; padding:8px; border-radius:10px; margin-right:10px;">${conf.i}</span>${c.n}</div><div style="font-weight:bold;">${formatMoney(c.a)}</div></div>`;
+            if(chartArr.length === 0) { 
+                conic = ["#e2e8f0 0% 100%"]; 
+                listHtml = '<div style="text-align:center; padding:20px; color:#94a3b8;">Chưa có dữ liệu</div>'; 
+            } else {
+                chartArr.forEach(c => { 
+                    let pct = (c.a / chartData.total) * 100; 
+                    let conf = expState.tab === 'in' ? CATS.in[c.n] : (expState.sub === 'child' ? CATS.out[c.n] : CATS.parent[c.n]); 
+                    if(!conf) conf = {c:"#9ca3af", i:"❔"}; 
+                    let nextPct = curPct + pct; 
+                    conic.push(`${conf.c} ${curPct}% ${nextPct}%`); 
+                    curPct = nextPct; 
+                    listHtml += `<div style="display:flex; justify-content:space-between; padding:16px 0; border-bottom:1px solid #f1f5f9;"><div style="font-size:14px; font-weight:500;"><span style="font-size:20px; background:${conf.c}20; padding:8px; border-radius:10px; margin-right:10px;">${conf.i}</span>${c.n}</div><div style="font-weight:bold;">${formatMoney(c.a)}</div></div>`; 
                 });
             }
-            document.getElementById('donutChart').style.background = `conic-gradient(${conic.join(',')})`; document.getElementById('category-list').innerHTML = listHtml;
+            document.getElementById('donutChart').style.background = `conic-gradient(${conic.join(',')})`; 
+            document.getElementById('category-list').innerHTML = listHtml;
 
             if(document.getElementById('exp-bien-dong').style.display === 'block') {
-                let cS, cE, pS, pE, lbl;
+                let cS, cE, pS, pE, lbl; 
                 let ty = today.getFullYear(), tm = today.getMonth() + 1, td = today.getDate();
-                if(momoState.time === 'month') { cS=`${ty}-${(tm<10?'0':'')+tm}-01`; cE=`${ty}-${(tm<10?'0':'')+tm}-${new Date(ty,tm,0).getDate()}`; let pM=tm-1; let pY=ty; if(pM===0){pM=12; pY--;} pS=`${pY}-${(pM<10?'0':'')+pM}-01`; pE=`${pY}-${(pM<10?'0':'')+pM}-${new Date(pY,pM,0).getDate()}`; lbl='tháng'; }
-                else if(momoState.time === 'year') { cS=`${ty}-01-01`; cE=`${ty}-12-31`; pS=`${ty-1}-01-01`; pE=`${ty-1}-12-31`; lbl='năm'; }
-                else { let wDay = today.getDay(); let diff = today.getDate() - wDay + (wDay == 0 ? -6:1); let cW = new Date(today.setDate(diff)); cS = toDateStr(cW); let cWE = new Date(cW); cWE.setDate(cW.getDate()+6); cE = toDateStr(cWE); let pW = new Date(cW); pW.setDate(cW.getDate()-7); pS = toDateStr(pW); let pWE = new Date(pW); pWE.setDate(pW.getDate()+6); pE = toDateStr(pWE); lbl='tuần'; }
+                if(momoState.time === 'month') { 
+                    cS=`${ty}-${(tm<10?'0':'')+tm}-01`; cE=`${ty}-${(tm<10?'0':'')+tm}-${new Date(ty,tm,0).getDate()}`; 
+                    let pM=tm-1; let pY=ty; if(pM===0){pM=12; pY--;} 
+                    pS=`${pY}-${(pM<10?'0':'')+pM}-01`; pE=`${pY}-${(pM<10?'0':'')+pM}-${new Date(pY,pM,0).getDate()}`; lbl='tháng'; 
+                }
+                else if(momoState.time === 'year') { 
+                    cS=`${ty}-01-01`; cE=`${ty}-12-31`; pS=`${ty-1}-01-01`; pE=`${ty-1}-12-31`; lbl='năm'; 
+                }
+                else { 
+                    let wDay = today.getDay(); let diff = today.getDate() - wDay + (wDay == 0 ? -6:1); 
+                    let cW = new Date(today.setDate(diff)); cS = toDateStr(cW); 
+                    let cWE = new Date(cW); cWE.setDate(cW.getDate()+6); cE = toDateStr(cWE); 
+                    let pW = new Date(cW); pW.setDate(cW.getDate()-7); pS = toDateStr(pW); 
+                    let pWE = new Date(pW); pWE.setDate(pW.getDate()+6); pE = toDateStr(pWE); lbl='tuần'; 
+                }
                 
                 let cTxns = getTxns(cS, cE); let pTxns = getTxns(pS, pE);
                 let cOut = sumTxns(cTxns, 'out', momoState.sub); let pOut = sumTxns(pTxns, 'out', momoState.sub);
                 let cIn = sumTxns(cTxns, 'in', 'child'); let pIn = sumTxns(pTxns, 'in', 'child');
                 
                 let cVal=0, pVal=0, title="", insight="", color="#3b82f6";
-                if(momoState.tab === 'out') { cVal = cOut.total; pVal = pOut.total; title = `Tổng chi ${lbl} này`; color="#ef4444"; let d = cVal-pVal; insight = d>=0 ? `<span style="color:#ef4444">↗ Tăng ${formatMoney(d)}</span>` : `<span style="color:#22c55e">↘ Giảm ${formatMoney(Math.abs(d))}</span>`; }
-                else if(momoState.tab === 'in') { cVal = cIn.total; pVal = pIn.total; title = `Tổng thu ${lbl} này`; color="#22c55e"; let d = cVal-pVal; insight = d>=0 ? `<span style="color:#22c55e">↗ Tăng ${formatMoney(d)}</span>` : `<span style="color:#ef4444">↘ Giảm ${formatMoney(Math.abs(d))}</span>`; }
-                else { cVal = cIn.total - cOut.total; pVal = pIn.total - pOut.total; title = `Chênh lệch ${lbl} này`; color="#3b82f6"; let d = cVal-pVal; insight = d>=0 ? `<span style="color:#22c55e">↗ Cải thiện ${formatMoney(d)}</span>` : `<span style="color:#ef4444">↘ Thâm hụt ${formatMoney(Math.abs(d))}</span>`; }
+                if(momoState.tab === 'out') { 
+                    cVal = cOut.total; pVal = pOut.total; title = `Tổng chi ${lbl} này`; color="#ef4444"; 
+                    let d = cVal-pVal; insight = d>=0 ? `<span style="color:#ef4444">↗ Tăng ${formatMoney(d)}</span>` : `<span style="color:#22c55e">↘ Giảm ${formatMoney(Math.abs(d))}</span>`; 
+                }
+                else if(momoState.tab === 'in') { 
+                    cVal = cIn.total; pVal = pIn.total; title = `Tổng thu ${lbl} này`; color="#22c55e"; 
+                    let d = cVal-pVal; insight = d>=0 ? `<span style="color:#22c55e">↗ Tăng ${formatMoney(d)}</span>` : `<span style="color:#ef4444">↘ Giảm ${formatMoney(Math.abs(d))}</span>`; 
+                }
+                else { 
+                    cVal = cIn.total - cOut.total; pVal = pIn.total - pOut.total; title = `Chênh lệch ${lbl} này`; color="#3b82f6"; 
+                    let d = cVal-pVal; insight = d>=0 ? `<span style="color:#22c55e">↗ Cải thiện ${formatMoney(d)}</span>` : `<span style="color:#ef4444">↘ Thâm hụt ${formatMoney(Math.abs(d))}</span>`; 
+                }
                 
-                document.getElementById('momo-summary-title').innerText = title; document.getElementById('momo-summary-amount').innerText = formatMoney(cVal); document.getElementById('momo-summary-insight').innerHTML = `${insight} so với ${lbl} trước`;
+                document.getElementById('momo-summary-title').innerText = title; 
+                document.getElementById('momo-summary-amount').innerText = formatMoney(cVal); 
+                document.getElementById('momo-summary-insight').innerHTML = `${insight} so với ${lbl} trước`;
+                
                 let maxB = Math.max(Math.abs(cVal), Math.abs(pVal));
-                document.getElementById('momo-bar-prev').style.height = maxB>0 ? ((Math.abs(pVal)/maxB)*110 + "px") : "0px"; document.getElementById('momo-bar-curr').style.height = maxB>0 ? ((Math.abs(cVal)/maxB)*110 + "px") : "0px"; document.getElementById('momo-bar-curr').style.background = color;
+                document.getElementById('momo-bar-prev').style.height = maxB>0 ? ((Math.abs(pVal)/maxB)*110 + "px") : "0px"; 
+                document.getElementById('momo-bar-curr').style.height = maxB>0 ? ((Math.abs(cVal)/maxB)*110 + "px") : "0px"; 
+                document.getElementById('momo-bar-curr').style.background = color;
                 
                 let lst = document.getElementById('momo-comparison-list'); lst.innerHTML = '';
                 if(momoState.tab !== 'diff') {
-                    let cg = momoState.tab === 'out' ? cOut.group : cIn.group; let pg = momoState.tab === 'out' ? pOut.group : pIn.group;
+                    let cg = momoState.tab === 'out' ? cOut.group : cIn.group; 
+                    let pg = momoState.tab === 'out' ? pOut.group : pIn.group; 
                     let keys = Array.from(new Set([...Object.keys(cg), ...Object.keys(pg)]));
+                    
                     if(keys.length === 0) lst.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Không có dữ liệu</div>';
-                    keys.forEach(k => {
-                        let ca = cg[k]||0; let pa = pg[k]||0; let diff = ca - pa; let dh = diff>0 ? `<span style="color:#ef4444">↗ ${formatMoney(diff)}</span>` : (diff<0 ? `<span style="color:#22c55e">↘ ${formatMoney(Math.abs(diff))}</span>` : `<span style="color:#94a3b8">không đổi</span>`);
-                        let conf = momoState.tab === 'in' ? CATS.in[k] : (momoState.sub === 'child' ? CATS.out[k] : CATS.parent[k]); if(!conf) conf = {c:"#9ca3af", i:"❔"};
-                        lst.innerHTML += `<div style="display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid #f1f5f9;"><div style="display:flex; align-items:center; gap:12px;"><span style="font-size:18px; background:${conf.c}15; padding:6px; border-radius:8px;">${conf.i}</span><span style="font-weight:500;">${k}</span></div><div style="text-align:right;"><div style="font-weight:bold;">${formatMoney(ca)}</div><div style="font-size:12px;">${dh}</div></div></div>`;
+                    
+                    keys.forEach(k => { 
+                        let ca = cg[k]||0; let pa = pg[k]||0; let diff = ca - pa; 
+                        let dh = diff>0 ? `<span style="color:#ef4444">↗ ${formatMoney(diff)}</span>` : (diff<0 ? `<span style="color:#22c55e">↘ ${formatMoney(Math.abs(diff))}</span>` : `<span style="color:#94a3b8">không đổi</span>`); 
+                        let conf = momoState.tab === 'in' ? CATS.in[k] : (momoState.sub === 'child' ? CATS.out[k] : CATS.parent[k]); 
+                        if(!conf) conf = {c:"#9ca3af", i:"❔"}; 
+                        lst.innerHTML += `<div style="display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid #f1f5f9;"><div style="display:flex; align-items:center; gap:12px;"><span style="font-size:18px; background:${conf.c}15; padding:6px; border-radius:8px;">${conf.i}</span><span style="font-weight:500;">${k}</span></div><div style="text-align:right;"><div style="font-weight:bold;">${formatMoney(ca)}</div><div style="font-size:12px;">${dh}</div></div></div>`; 
                     });
                 }
             }
         }
 
-        let tempExpType = 'out';
-        function setFormType(t) { tempExpType = t; document.getElementById('btn-type-out').className = `type-btn ${t === 'out' ? 'active-out' : ''}`; document.getElementById('btn-type-in').className = `type-btn ${t === 'in' ? 'active-in' : ''}`; let sel = document.getElementById('expCategory'); sel.innerHTML = ''; let dict = t === 'out' ? CATS.out : CATS.in; for(let k in dict) sel.innerHTML += `<option value="${k}">${dict[k].i} ${k}</option>`; }
-        function saveExpense() { let d = document.getElementById('expDesc').value; let a = parseInt(document.getElementById('expAmount').value); if(!d || !a) return alert("Nhập đủ thông tin!"); appData.expenses.push({ id: genId(), type: tempExpType, category: document.getElementById('expCategory').value, desc: d, amount: a, date: toDateStr(today), time: today.getHours()+":"+(today.getMinutes()<10?'0':'')+today.getMinutes() }); saveData(); closeModal('addExpModal'); document.getElementById('expDesc').value=''; document.getElementById('expAmount').value=''; renderExpenseData(); }
-
-        // ================= GHI CHÚ =================
-        function renderNotes() {
-            let c = document.getElementById('notes-list-container'); c.innerHTML = ''; let sorted = [...appData.notes].sort((a,b) => b.updated_at.localeCompare(a.updated_at));
-            if(sorted.length === 0) { c.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">📝<br>Chưa có ghi chú nào</div>'; return; }
-            sorted.forEach(n => { c.innerHTML += `<div class="card" style="position:relative; margin-bottom:15px; padding:18px;"><div style="font-weight:bold; font-size:16px; margin-bottom:8px; padding-right:40px;">${n.title}</div><div style="font-size:14px; color:#475569; white-space:pre-wrap; margin-bottom:12px;">${n.content}</div><div style="font-size:11px; color:#94a3b8;">⏱ ${n.updated_at}</div><div style="position:absolute; top:15px; right:15px; display:flex; flex-direction:column; gap:10px;"><span style="font-size:18px; cursor:pointer;" onclick="openNoteModal('${n.id}')">✏️</span><span style="font-size:18px; cursor:pointer;" onclick="deleteNote('${n.id}')">🗑️</span></div></div>`; });
+        let tempExpType = 'out'; 
+        // YÊU CẦU 2: Đảm bảo danh mục xổ ra đầy đủ khi bấm nút thêm mới
+        function setFormType(t) { 
+            tempExpType = t; 
+            document.getElementById('btn-type-out').className = `type-btn ${t === 'out' ? 'active-out' : ''}`; 
+            document.getElementById('btn-type-in').className = `type-btn ${t === 'in' ? 'active-in' : ''}`; 
+            
+            let sel = document.getElementById('expCategory'); 
+            sel.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>'; 
+            
+            let dict = t === 'out' ? CATS.out : CATS.in; 
+            for(let k in dict) {
+                sel.innerHTML += `<option value="${k}">${dict[k].i} ${k}</option>`; 
+            }
         }
-        function openNoteModal(id = null) { document.getElementById('noteId').value = id||""; if (id) { let n = appData.notes.find(x => x.id === id); document.getElementById('noteTitle').value = n.title; document.getElementById('noteContent').value = n.content; document.getElementById('noteModalTitle').innerText = "Sửa Ghi Chú"; } else { document.getElementById('noteTitle').value = ""; document.getElementById('noteContent').value = ""; document.getElementById('noteModalTitle').innerText = "Thêm Ghi Chú"; } openModal('noteModal'); }
-        function saveNote() { let id = document.getElementById('noteId').value; let t = document.getElementById('noteTitle').value; let c = document.getElementById('noteContent').value; if(!t || !c) return alert("Nhập đủ thông tin!"); let now = new Date().toISOString().replace('T', ' ').slice(0, 16); if(id) { let n = appData.notes.find(x => x.id === id); n.title=t; n.content=c; n.updated_at=now; } else { appData.notes.push({ id: genId(), title: t, content: c, created_at: now, updated_at: now }); } saveData(); closeModal('noteModal'); renderNotes(); }
+        
+        function saveExpense() { 
+            let d = document.getElementById('expDesc').value; 
+            let a = parseInt(document.getElementById('expAmount').value); 
+            let cat = document.getElementById('expCategory').value;
+            
+            if(!d || !a || !cat) return alert("Vui lòng nhập số tiền, mô tả và chọn Danh mục!"); 
+            
+            appData.expenses.push({ 
+                id: genId(), 
+                type: tempExpType, 
+                category: cat, 
+                desc: d, 
+                amount: a, 
+                date: toDateStr(today), 
+                time: today.getHours()+":"+(today.getMinutes()<10?'0':'')+today.getMinutes() 
+            }); 
+            
+            saveData(); 
+            closeModal('addExpModal'); 
+            document.getElementById('expDesc').value=''; 
+            document.getElementById('expAmount').value=''; 
+            renderExpenseData(); 
+        }
+
+        // ================= GHI CHÚ & CÀI ĐẶT =================
+        function renderNotes() { 
+            let c = document.getElementById('notes-list-container'); c.innerHTML = ''; 
+            let sorted = [...appData.notes].sort((a,b) => b.updated_at.localeCompare(a.updated_at)); 
+            if(sorted.length === 0) { c.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">📝<br>Chưa có ghi chú nào</div>'; return; } 
+            sorted.forEach(n => { c.innerHTML += `<div class="card" style="position:relative; margin-bottom:15px; padding:18px;"><div style="font-weight:bold; font-size:16px; margin-bottom:8px; padding-right:40px;">${n.title}</div><div style="font-size:14px; color:#475569; white-space:pre-wrap; margin-bottom:12px;">${n.content}</div><div style="font-size:11px; color:#94a3b8;">⏱ ${n.updated_at}</div><div style="position:absolute; top:15px; right:15px; display:flex; flex-direction:column; gap:10px;"><span style="font-size:18px; cursor:pointer;" onclick="openNoteModal('${n.id}')">✏️</span><span style="font-size:18px; cursor:pointer;" onclick="deleteNote('${n.id}')">🗑️</span></div></div>`; }); 
+        }
+        function openNoteModal(id = null) { 
+            document.getElementById('noteId').value = id||""; 
+            if (id) { let n = appData.notes.find(x => x.id === id); document.getElementById('noteTitle').value = n.title; document.getElementById('noteContent').value = n.content; document.getElementById('noteModalTitle').innerText = "Sửa Ghi Chú"; } 
+            else { document.getElementById('noteTitle').value = ""; document.getElementById('noteContent').value = ""; document.getElementById('noteModalTitle').innerText = "Thêm Ghi Chú"; } 
+            openModal('noteModal'); 
+        }
+        function saveNote() { 
+            let id = document.getElementById('noteId').value; let t = document.getElementById('noteTitle').value; let c = document.getElementById('noteContent').value; 
+            if(!t || !c) return alert("Nhập đủ thông tin!"); 
+            let now = new Date().toISOString().replace('T', ' ').slice(0, 16); 
+            if(id) { let n = appData.notes.find(x => x.id === id); n.title=t; n.content=c; n.updated_at=now; } 
+            else { appData.notes.push({ id: genId(), title: t, content: c, created_at: now, updated_at: now }); } 
+            saveData(); closeModal('noteModal'); renderNotes(); 
+        }
         function deleteNote(id) { if(confirm("Xóa ghi chú?")) { appData.notes = appData.notes.filter(x => x.id !== id); saveData(); renderNotes(); } }
-
-        // ================= CÀI ĐẶT =================
+        
         function exportData() { const blob = new Blob([JSON.stringify(appData)], {type:"application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `BinhBackup_${toDateStr(today).replace(/-/g,'')}.json`; a.click(); }
-        function importData(input) { if(!input.files.length) return; if(!confirm("GHI ĐÈ TOÀN BỘ?")) return; const r = new FileReader(); r.onload = e => { try { let imp = JSON.parse(e.target.result); if(imp.tasks) { appData = imp; saveData(); alert("Khôi phục thành công!"); location.reload(); } else alert("Lỗi định dạng!"); } catch(err) { alert("Lỗi đọc file!"); } }; r.readAsText(input.files[0]); input.value = ""; }
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; if(id==='addExpModal') setFormType(expState.tab); }
+        function importData(input) { if(!input.files.length) return; if(!confirm("GHI ĐÈ TOÀN BỘ DỮ LIỆU HIỆN CÓ?")) return; const r = new FileReader(); r.onload = e => { try { let imp = JSON.parse(e.target.result); if(imp.tasks) { appData = imp; saveData(); alert("Khôi phục thành công!"); location.reload(); } else alert("Lỗi định dạng!"); } catch(err) { alert("Lỗi đọc file!"); } }; r.readAsText(input.files[0]); input.value = ""; }
+        
+        function openModal(id) { 
+            document.getElementById(id).style.display = 'flex'; 
+            if(id==='addExpModal') setFormType(expState.tab); 
+        }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
         window.onload = () => { loadData(); renderTasks(); };
     </script>
 </body>
