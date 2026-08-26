@@ -59,7 +59,12 @@
         .donut-chart { width: 100%; height: 100%; border-radius: 50%; }
         .donut-hole { width: 100px; height: 100px; background: white; border-radius: 50%; position: absolute; }
         
-        /* Nhiệm vụ specific - KHÔNG GẠCH NGANG */
+        /* ĐÃ PHỤC HỒI CSS CHO 3 NÚT LỌC BIẾN ĐỘNG THU CHI */
+        .momo-time-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 15px; }
+        .momo-time-tab { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; color: #64748b; cursor: pointer; border-radius: 8px; font-weight: 500;}
+        .momo-time-tab.active { background: white; color: #d82d8b; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        /* Nhiệm vụ specific */
         .task-card { background: white; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
         .task-card.done { opacity: 0.5; background: #f8f9fa; }
     </style>
@@ -111,7 +116,7 @@
 
             <!-- Biến động chi tiêu -->
             <div id="exp-bien-dong" style="display: none;">
-                <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 15px;">
+                <div class="momo-time-tabs">
                     <div class="momo-time-tab" id="momo-time-week" onclick="setMomoTime('week')">Theo tuần</div>
                     <div class="momo-time-tab active" id="momo-time-month" onclick="setMomoTime('month')">Theo tháng</div>
                     <div class="momo-time-tab" id="momo-time-year" onclick="setMomoTime('year')">Theo năm</div>
@@ -332,7 +337,9 @@
             }
             
             let myTasks = appData.tasks[taskSelectedDateStr];
-            let isPastDate = taskSelectedDateStr < todayStr; // Xác định nếu là ngày quá khứ
+            
+            // XÁC ĐỊNH NGÀY QUÁ KHỨ (BẤT KỂ LÀ TAB TUẦN HAY LỊCH SỬ)
+            let isPastDate = taskSelectedDateStr < todayStr; 
             
             cList.innerHTML = `<h3 style="color:#475569; font-size:14px; border-bottom: 2px solid #e2e8f0; padding-bottom:5px;">Ngày ${taskSelectedDateStr.split('-').reverse().join('/')}</h3>`;
             
@@ -340,7 +347,6 @@
                 let isDone = myTasks[idx];
                 
                 if (isDone) {
-                    // Đã xong: Làm mờ, KHÔNG gạch ngang chữ, KHÔNG CÓ NÚT HỦY
                     cList.innerHTML += `
                         <div class="task-card done">
                             <span style="font-size:14px; font-weight:500; color: #94a3b8;">${tn}</span>
@@ -348,14 +354,14 @@
                         </div>`;
                 } else {
                     if (taskMode === 'history' || isPastDate) {
-                        // Ngày quá khứ hoặc tab Lịch sử -> CHỈ ĐƯỢC XEM, không có nút bấm hoàn thành
+                        // NẾU LÀ QUÁ KHỨ -> LIỆT NÚT, KHÔNG CHO BẤM
                         cList.innerHTML += `
                             <div class="task-card">
                                 <span style="font-size:14px; font-weight:500; color: #1e293b;">${tn}</span>
                                 <span style="font-size:20px; color: #cbd5e1;">⬜</span>
                             </div>`;
                     } else {
-                        // Ngày hiện tại hoặc tương lai -> Có nút bấm hỏi xác nhận
+                        // NGÀY HIỆN TẠI / TƯƠNG LAI -> CÓ THỂ ĐÁNH DẤU
                         cList.innerHTML += `
                             <div class="task-card">
                                 <span style="font-size:14px; font-weight:500; color: #1e293b;">${tn}</span>
