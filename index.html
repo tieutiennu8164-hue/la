@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Binh Ky Luat App</title>
+    
+    <!-- MÃ HỦY DIỆT BỘ NHỚ ĐỆM CŨ -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let r of registrations) { r.unregister(); }
+            });
+        }
+    </script>
+    
     <style>
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8f9fa; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -49,9 +59,9 @@
         .donut-chart { width: 100%; height: 100%; border-radius: 50%; }
         .donut-hole { width: 100px; height: 100px; background: white; border-radius: 50%; position: absolute; }
         
-        /* Nhiệm vụ specific */
+        /* Nhiệm vụ specific - KHÔNG GẠCH NGANG */
         .task-card { background: white; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
-        .task-card.done { opacity: 0.5; background: #f1f5f9; }
+        .task-card.done { opacity: 0.5; background: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -268,7 +278,7 @@
             if(mode === 'history') { 
                 taskSelectedDateStr = `${taskHistY}-${(taskHistM<10?'0':'')+taskHistM}-01`; 
             } else { 
-                taskSelectedDateStr = toDateStr(today); 
+                taskSelectedDateStr = toDateStr(new Date()); 
             }
             renderTasks();
         }
@@ -278,6 +288,8 @@
             const cList = document.getElementById('task-list-container'); 
             cDate.innerHTML = ''; 
             cList.innerHTML = '';
+            
+            let todayStr = toDateStr(new Date());
             
             if(taskMode === 'history') {
                 const cYear = document.getElementById('task-year-container'); 
@@ -302,7 +314,7 @@
                 let curr = new Date(); 
                 let day = curr.getDay(); 
                 let diffToMon = curr.getDate() - day + (day === 0 ? -6 : 1);
-                let monday = new Date(curr.setDate(diffToMon)); 
+                let monday = new Date(new Date().setDate(diffToMon)); 
                 let dayNames = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
                 
                 for(let i = 0; i < 7; i++) {
@@ -310,7 +322,7 @@
                     d.setDate(monday.getDate() + i); 
                     let dStr = toDateStr(d); 
                     let dayName = dayNames[i];
-                    if(dStr === toDateStr(new Date())) dayName = "Hôm nay";
+                    if(dStr === todayStr) dayName = "Hôm nay";
                     cDate.innerHTML += `<div class="domino-btn ${dStr === taskSelectedDateStr ? 'active':''}" onclick="taskSelectedDateStr='${dStr}'; renderTasks();">${dayName}</div>`;
                 }
             }
@@ -320,23 +332,36 @@
             }
             
             let myTasks = appData.tasks[taskSelectedDateStr];
+            let isPastDate = taskSelectedDateStr < todayStr; // Xác định nếu là ngày quá khứ
+            
             cList.innerHTML = `<h3 style="color:#475569; font-size:14px; border-bottom: 2px solid #e2e8f0; padding-bottom:5px;">Ngày ${taskSelectedDateStr.split('-').reverse().join('/')}</h3>`;
             
             TASKS.forEach((tn, idx) => {
                 let isDone = myTasks[idx];
                 
                 if (isDone) {
+                    // Đã xong: Làm mờ, KHÔNG gạch ngang chữ, KHÔNG CÓ NÚT HỦY
                     cList.innerHTML += `
                         <div class="task-card done">
                             <span style="font-size:14px; font-weight:500; color: #94a3b8;">${tn}</span>
                             <span style="font-size:20px;">✅</span>
                         </div>`;
                 } else {
-                    cList.innerHTML += `
-                        <div class="task-card">
-                            <span style="font-size:14px; font-weight:500; color: #1e293b;">${tn}</span>
-                            <button style="background:transparent; border:none; font-size:20px; cursor:pointer;" onclick="toggleTask('${taskSelectedDateStr}', ${idx})">⬜</button>
-                        </div>`;
+                    if (taskMode === 'history' || isPastDate) {
+                        // Ngày quá khứ hoặc tab Lịch sử -> CHỈ ĐƯỢC XEM, không có nút bấm hoàn thành
+                        cList.innerHTML += `
+                            <div class="task-card">
+                                <span style="font-size:14px; font-weight:500; color: #1e293b;">${tn}</span>
+                                <span style="font-size:20px; color: #cbd5e1;">⬜</span>
+                            </div>`;
+                    } else {
+                        // Ngày hiện tại hoặc tương lai -> Có nút bấm hỏi xác nhận
+                        cList.innerHTML += `
+                            <div class="task-card">
+                                <span style="font-size:14px; font-weight:500; color: #1e293b;">${tn}</span>
+                                <button style="background:transparent; border:none; font-size:20px; cursor:pointer;" onclick="toggleTask('${taskSelectedDateStr}', ${idx})">⬜</button>
+                            </div>`;
+                    }
                 }
             });
         }
@@ -344,7 +369,7 @@
         function toggleTask(dStr, idx) {
             let isDone = appData.tasks[dStr][idx];
             if (!isDone) {
-                if (confirm("Xác nhận bạn ĐÃ HOÀN THÀNH nhiệm vụ này? (Đánh dấu xong sẽ không thể hủy)")) {
+                if (confirm("Xác nhận bạn ĐÃ HOÀN THÀNH nhiệm vụ này?\n(Lưu ý: Sau khi đánh dấu xong sẽ không thể hủy!)")) {
                     appData.tasks[dStr][idx] = true;
                     saveData(); 
                     renderTasks();
@@ -456,11 +481,10 @@
             document.getElementById('donutChart').style.background = `conic-gradient(${conic.join(',')})`; 
             document.getElementById('category-list').innerHTML = listHtml;
 
-            // Xử lý render cho phần Biến động (FIX lỗi lùi ngày)
             if(document.getElementById('exp-bien-dong').style.display === 'block') {
                 let cS, cE, pS, pE, lbl; 
-                let nowObj = new Date(); // Tạo bản sao ngày hiện tại
-                let ty = nowObj.getFullYear(), tm = nowObj.getMonth() + 1, td = nowObj.getDate();
+                let nowObj = new Date(); 
+                let ty = nowObj.getFullYear(), tm = nowObj.getMonth() + 1;
                 
                 if(momoState.time === 'month') { 
                     cS=`${ty}-${(tm<10?'0':'')+tm}-01`; cE=`${ty}-${(tm<10?'0':'')+tm}-${new Date(ty,tm,0).getDate()}`; 
@@ -471,14 +495,14 @@
                     cS=`${ty}-01-01`; cE=`${ty}-12-31`; pS=`${ty-1}-01-01`; pE=`${ty-1}-12-31`; lbl='năm'; 
                 }
                 else { 
-                    let tempDate = new Date(); // Dùng bản sao mới để tính toán tuần
+                    let tempDate = new Date(); 
                     let wDay = tempDate.getDay(); 
                     let diff = tempDate.getDate() - wDay + (wDay == 0 ? -6:1); 
                     let cW = new Date(tempDate.setDate(diff)); 
                     cS = toDateStr(cW); 
                     
                     let cWE = new Date(cW); cWE.setDate(cW.getDate()+6); cE = toDateStr(cWE); 
-                    let pW = new Date(cW); pW.setDate(cW.getDate()-7); pS = toDateStr(pW); 
+                    let pW = new Date(new Date(cW).setDate(cW.getDate()-7)); pS = toDateStr(pW); 
                     let pWE = new Date(pW); pWE.setDate(pW.getDate()+6); pE = toDateStr(pWE); lbl='tuần'; 
                 }
                 
@@ -550,7 +574,7 @@
             
             if(!d || !a || !cat) return alert("Vui lòng nhập số tiền, mô tả và chọn Danh mục!"); 
             
-            let safeNow = new Date(); // Dùng bản sao mới khi lưu
+            let safeNow = new Date(); 
             appData.expenses.push({ 
                 id: genId(), 
                 type: tempExpType, 
