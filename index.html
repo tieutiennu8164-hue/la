@@ -326,14 +326,12 @@
                 let isDone = myTasks[idx];
                 
                 if (isDone) {
-                    // YÊU CẦU 1: Làm mờ, KHÔNG gạch ngang chữ, Ẩn nút bấm để không sửa được nữa
                     cList.innerHTML += `
                         <div class="task-card done">
                             <span style="font-size:14px; font-weight:500; color: #94a3b8;">${tn}</span>
                             <span style="font-size:20px;">✅</span>
                         </div>`;
                 } else {
-                    // Chưa xong: Có nút bấm để chọn
                     cList.innerHTML += `
                         <div class="task-card">
                             <span style="font-size:14px; font-weight:500; color: #1e293b;">${tn}</span>
@@ -458,9 +456,12 @@
             document.getElementById('donutChart').style.background = `conic-gradient(${conic.join(',')})`; 
             document.getElementById('category-list').innerHTML = listHtml;
 
+            // Xử lý render cho phần Biến động (FIX lỗi lùi ngày)
             if(document.getElementById('exp-bien-dong').style.display === 'block') {
                 let cS, cE, pS, pE, lbl; 
-                let ty = today.getFullYear(), tm = today.getMonth() + 1, td = today.getDate();
+                let nowObj = new Date(); // Tạo bản sao ngày hiện tại
+                let ty = nowObj.getFullYear(), tm = nowObj.getMonth() + 1, td = nowObj.getDate();
+                
                 if(momoState.time === 'month') { 
                     cS=`${ty}-${(tm<10?'0':'')+tm}-01`; cE=`${ty}-${(tm<10?'0':'')+tm}-${new Date(ty,tm,0).getDate()}`; 
                     let pM=tm-1; let pY=ty; if(pM===0){pM=12; pY--;} 
@@ -470,8 +471,12 @@
                     cS=`${ty}-01-01`; cE=`${ty}-12-31`; pS=`${ty-1}-01-01`; pE=`${ty-1}-12-31`; lbl='năm'; 
                 }
                 else { 
-                    let wDay = today.getDay(); let diff = today.getDate() - wDay + (wDay == 0 ? -6:1); 
-                    let cW = new Date(today.setDate(diff)); cS = toDateStr(cW); 
+                    let tempDate = new Date(); // Dùng bản sao mới để tính toán tuần
+                    let wDay = tempDate.getDay(); 
+                    let diff = tempDate.getDate() - wDay + (wDay == 0 ? -6:1); 
+                    let cW = new Date(tempDate.setDate(diff)); 
+                    cS = toDateStr(cW); 
+                    
                     let cWE = new Date(cW); cWE.setDate(cW.getDate()+6); cE = toDateStr(cWE); 
                     let pW = new Date(cW); pW.setDate(cW.getDate()-7); pS = toDateStr(pW); 
                     let pWE = new Date(pW); pWE.setDate(pW.getDate()+6); pE = toDateStr(pWE); lbl='tuần'; 
@@ -524,7 +529,6 @@
         }
 
         let tempExpType = 'out'; 
-        // YÊU CẦU 2: Đảm bảo danh mục xổ ra đầy đủ khi bấm nút thêm mới
         function setFormType(t) { 
             tempExpType = t; 
             document.getElementById('btn-type-out').className = `type-btn ${t === 'out' ? 'active-out' : ''}`; 
@@ -546,14 +550,15 @@
             
             if(!d || !a || !cat) return alert("Vui lòng nhập số tiền, mô tả và chọn Danh mục!"); 
             
+            let safeNow = new Date(); // Dùng bản sao mới khi lưu
             appData.expenses.push({ 
                 id: genId(), 
                 type: tempExpType, 
                 category: cat, 
                 desc: d, 
                 amount: a, 
-                date: toDateStr(today), 
-                time: today.getHours()+":"+(today.getMinutes()<10?'0':'')+today.getMinutes() 
+                date: toDateStr(safeNow), 
+                time: safeNow.getHours()+":"+(safeNow.getMinutes()<10?'0':'')+safeNow.getMinutes() 
             }); 
             
             saveData(); 
